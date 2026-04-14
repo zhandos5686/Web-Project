@@ -1,0 +1,75 @@
+h1 {
+  margin-top: 0;
+  font-size: 52px;
+  color: #0f5f61;
+}
+
+.task-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.summary-box {
+  background: #fffaf0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #eadfbe;
+  box-shadow: 0 8px 22px rgba(83, 72, 48, 0.08);
+  font-weight: 700;
+  color: #7a4e12;
+}
+
+.task-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.task-card {
+  background: #fffaf0;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #eadfbe;
+  box-shadow: 0 8px 22px rgba(83, 72, 48, 0.08);
+}
+
+.task-card h3 {
+  margin-top: 0;
+  color: #7a4e12;
+  font-size: 22px;
+}
+
+.complete-btn {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #17a2a4;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.complete-btn:hover {
+  background: #11888a;
+}
+
+.completed {
+  margin-top: 12px;
+  color: #0f7c53;
+  font-weight: 700;
+}
+
+.error {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.success {
+  color: #0f7c53;
+  margin-bottom: 12px;
+  font-weight: 700;
+}

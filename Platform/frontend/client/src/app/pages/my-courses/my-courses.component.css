@@ -1,0 +1,31 @@
+h1 {
+  margin-top: 0;
+  font-size: 52px;
+  color: #0f5f61;
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.course-card {
+  background: #fffaf0;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #eadfbe;
+  box-shadow: 0 8px 22px rgba(83, 72, 48, 0.08);
+}
+
+.course-card h3 {
+  margin-top: 0;
+  color: #7a4e12;
+  font-size: 22px;
+}
+
+.error {
+  color: #b42318;
+  font-weight: 700;
+}

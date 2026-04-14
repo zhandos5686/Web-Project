@@ -1,0 +1,26 @@
+<h1>My Courses</h1>
+
+@if (isLoading) {
+  <p>Loading...</p>
+}
+
+@if (!isLoading && errorMessage) {
+  <p class="error">{{ errorMessage }}</p>
+}
+
+@if (!isLoading && !errorMessage && courses.length === 0) {
+  <p>No enrolled courses yet.</p>
+}
+
+@if (!isLoading && courses.length > 0) {
+  <div class="course-grid">
+    @for (course of courses; track course.id) {
+      <div class="course-card">
+        <h3>{{ course.title }}</h3>
+        <p>{{ course.description }}</p>
+        <p><strong>Price:</strong> {{ course.price }}</p>
+        <p><strong>Start date:</strong> {{ course.start_date }}</p>
+      </div>
+    }
+  </div>
+}
