@@ -22,6 +22,8 @@ export interface Lesson {
 
 export interface CourseModule {
   id: number;
+  course_id?: number;
+  course_title?: string;
   title: string;
   order: number;
   lessons: Lesson[];

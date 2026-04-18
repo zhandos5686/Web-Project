@@ -30,10 +30,12 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class ModuleSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
+    course_id = serializers.IntegerField(source="course.id", read_only=True)
+    course_title = serializers.CharField(source="course.title", read_only=True)
 
     class Meta:
         model = Module
-        fields = ["id", "title", "order", "lessons"]
+        fields = ["id", "course_id", "course_title", "title", "order", "lessons"]
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -103,7 +105,7 @@ class TeacherModuleCreateSerializer(serializers.ModelSerializer):
     def validate_course(self, value):
         request = self.context["request"]
         if value.teacher_id != request.user.id:
-            raise serializers.ValidationError("Teachers can add modules only to their own courses.")
+            raise serializers.ValidationError("Ownership error: teachers can add modules only to their own courses.")
         return value
 
 
@@ -115,5 +117,5 @@ class TeacherLessonCreateSerializer(serializers.ModelSerializer):
     def validate_module(self, value):
         request = self.context["request"]
         if value.course.teacher_id != request.user.id:
-            raise serializers.ValidationError("Teachers can add lessons only to their own courses.")
+            raise serializers.ValidationError("Ownership error: teachers can add lessons only to modules from their own courses.")
         return value

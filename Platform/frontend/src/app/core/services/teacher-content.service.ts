@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 
 import { ApiService } from './api.service';
 import { Course, CourseModule, Lesson } from './course.service';
-import { LessonTask, MyTaskSubmission, QuizChoice, QuizQuestion } from './lesson-activity.service';
+import { LessonQuiz, LessonTask, MyTaskSubmission, QuizChoice, QuizQuestion } from './lesson-activity.service';
 
 export interface CreateCoursePayload {
   title: string;
@@ -36,7 +36,10 @@ export interface CreateQuizPayload {
 export interface CreatedQuiz {
   id: number;
   lesson: number;
+  lesson_title?: string;
+  course_title?: string;
   title: string;
+  questions?: QuizQuestion[];
 }
 
 export interface TeacherQuizSubmission {
@@ -77,16 +80,24 @@ export interface CreateTaskPayload {
 export class TeacherContentService {
   private readonly api = inject(ApiService);
 
-  getCourses(): Observable<Course[]> {
-    return this.api.get<Course[]>('/courses/courses/');
+  getMyCourses(): Observable<Course[]> {
+    return this.api.get<Course[]>('/courses/teacher/my-courses/');
   }
 
-  getModules(): Observable<CourseModule[]> {
-    return this.api.get<CourseModule[]>('/courses/modules/');
+  getMyModules(): Observable<CourseModule[]> {
+    return this.api.get<CourseModule[]>('/courses/teacher/my-modules/');
   }
 
-  getLessons(): Observable<Lesson[]> {
-    return this.api.get<Lesson[]>('/courses/lessons/');
+  getMyLessons(): Observable<Lesson[]> {
+    return this.api.get<Lesson[]>('/courses/teacher/my-lessons/');
+  }
+
+  getMyQuizzes(): Observable<LessonQuiz[]> {
+    return this.api.get<LessonQuiz[]>('/learning/teacher/my-quizzes/');
+  }
+
+  getMyQuestions(): Observable<QuizQuestion[]> {
+    return this.api.get<QuizQuestion[]>('/learning/teacher/my-questions/');
   }
 
   createCourse(payload: CreateCoursePayload): Observable<Course> {

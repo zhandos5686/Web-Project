@@ -1,7 +1,7 @@
 <section class="page teacher-page">
   <div class="page-heading">
     <h1>Teacher Dashboard</h1>
-    <p>Create course content step by step: course, module, lesson, quiz, questions, choices, and written task.</p>
+    <p>Create content, approve students, and review learning activity for your courses.</p>
   </div>
 
   @if (message) {
@@ -9,6 +9,9 @@
   }
   @if (errorMessage) {
     <div class="message error">{{ errorMessage }}</div>
+  }
+  @if (isLoading) {
+    <div class="message">Loading teacher dashboard data...</div>
   }
 
   <div class="dashboard-grid">
@@ -22,6 +25,7 @@
         <li>Add questions and choices to the quiz.</li>
       </ol>
       <p>Quiz belongs to a lesson, not directly to a course. A course contains modules, and modules contain lessons.</p>
+      <p>The forms below use only content owned by the logged-in teacher.</p>
     </aside>
 
     <form class="teacher-card" (ngSubmit)="createCourse()">
@@ -37,32 +41,34 @@
 
     <form class="teacher-card" (ngSubmit)="createModule()">
       <h2>Create module</h2>
+      @if (courses.length === 0) {
+        <p class="helper-text">Create a course first.</p>
+      }
       <label>
         Course
-        <select name="moduleCourse" [(ngModel)]="moduleForm.course" required>
+        <select name="moduleCourse" [(ngModel)]="moduleForm.course" [disabled]="courses.length === 0" required>
           <option [ngValue]="0">Choose course</option>
-          @if (courses$ | async; as courses) {
-            @for (course of courses; track course.id) {
-              <option [ngValue]="course.id">{{ course.title }} (id {{ course.id }})</option>
-            }
+          @for (course of courses; track course.id) {
+            <option [ngValue]="course.id">{{ course.title }} (id {{ course.id }})</option>
           }
         </select>
       </label>
       <label>Title <input name="moduleTitle" [(ngModel)]="moduleForm.title" required></label>
       <label>Order <input type="number" name="moduleOrder" [(ngModel)]="moduleForm.order"></label>
-      <button type="submit">Create module</button>
+      <button type="submit" [disabled]="courses.length === 0 || moduleForm.course === 0">Create module</button>
     </form>
 
     <form class="teacher-card" (ngSubmit)="createLesson()">
       <h2>Create lesson</h2>
+      @if (modules.length === 0) {
+        <p class="helper-text">Create a module first.</p>
+      }
       <label>
         Module
-        <select name="lessonModule" [(ngModel)]="lessonForm.module" required>
+        <select name="lessonModule" [(ngModel)]="lessonForm.module" [disabled]="modules.length === 0" required>
           <option [ngValue]="0">Choose module</option>
-          @if (modules$ | async; as modules) {
-            @for (module of modules; track module.id) {
-              <option [ngValue]="module.id">{{ module.title }} (id {{ module.id }})</option>
-            }
+          @for (module of modules; track module.id) {
+            <option [ngValue]="module.id">{{ module.course_title || 'Course' }} / {{ module.title }} (id {{ module.id }})</option>
           }
         </select>
       </label>
@@ -70,85 +76,136 @@
       <label>YouTube URL <input name="lessonYoutube" [(ngModel)]="lessonForm.youtube_url"></label>
       <label>Content <textarea name="lessonContent" [(ngModel)]="lessonForm.content" rows="4"></textarea></label>
       <label>Order <input type="number" name="lessonOrder" [(ngModel)]="lessonForm.order"></label>
-      <button type="submit">Create lesson</button>
+      <button type="submit" [disabled]="modules.length === 0 || lessonForm.module === 0">Create lesson</button>
     </form>
 
     <form class="teacher-card" (ngSubmit)="createQuiz()">
       <h2>Create quiz</h2>
+      @if (lessons.length === 0) {
+        <p class="helper-text">Create a lesson first.</p>
+      }
       <label>
         Lesson
-        <select name="quizLesson" [(ngModel)]="quizForm.lesson" required>
+        <select name="quizLesson" [(ngModel)]="quizForm.lesson" [disabled]="lessons.length === 0" required>
           <option [ngValue]="0">Choose lesson</option>
-          @if (lessons$ | async; as lessons) {
-            @for (lesson of lessons; track lesson.id) {
-              <option [ngValue]="lesson.id">{{ lesson.title }} (id {{ lesson.id }})</option>
-            }
+          @for (lesson of lessons; track lesson.id) {
+            <option [ngValue]="lesson.id">{{ lesson.course_title }} / {{ lesson.module_title }} / {{ lesson.title }} (id {{ lesson.id }})</option>
           }
         </select>
       </label>
       <label>Title <input name="quizTitle" [(ngModel)]="quizForm.title" required></label>
-      <button type="submit">Create quiz</button>
+      <button type="submit" [disabled]="lessons.length === 0 || quizForm.lesson === 0">Create quiz</button>
     </form>
 
     <form class="teacher-card" (ngSubmit)="createQuestion()">
       <h2>Create question</h2>
-      <label>Quiz id <input type="number" name="questionQuiz" [(ngModel)]="questionForm.quiz" required></label>
+      @if (quizzes.length === 0) {
+        <p class="helper-text">Create a quiz first.</p>
+      }
+      <label>
+        Quiz
+        <select name="questionQuiz" [(ngModel)]="questionForm.quiz" [disabled]="quizzes.length === 0" required>
+          <option [ngValue]="0">Choose quiz</option>
+          @for (quiz of quizzes; track quiz.id) {
+            <option [ngValue]="quiz.id">{{ quiz.course_title }} / {{ quiz.lesson_title }} / {{ quiz.title }} (id {{ quiz.id }})</option>
+          }
+        </select>
+      </label>
       <label>Question text <textarea name="questionText" [(ngModel)]="questionForm.text" rows="3" required></textarea></label>
       <label>Order <input type="number" name="questionOrder" [(ngModel)]="questionForm.order"></label>
-      <button type="submit">Create question</button>
+      <button type="submit" [disabled]="quizzes.length === 0 || questionForm.quiz === 0">Create question</button>
     </form>
 
     <form class="teacher-card" (ngSubmit)="createChoice()">
       <h2>Create choice</h2>
-      <label>Question id <input type="number" name="choiceQuestion" [(ngModel)]="choiceForm.question" required></label>
+      @if (questions.length === 0) {
+        <p class="helper-text">Create a question first.</p>
+      }
+      <label>
+        Question
+        <select name="choiceQuestion" [(ngModel)]="choiceForm.question" [disabled]="questions.length === 0" required>
+          <option [ngValue]="0">Choose question</option>
+          @for (question of questions; track question.id) {
+            <option [ngValue]="question.id">{{ question.course_title }} / {{ question.quiz_title }} / {{ question.text }} (id {{ question.id }})</option>
+          }
+        </select>
+      </label>
       <label>Choice text <input name="choiceText" [(ngModel)]="choiceForm.text" required></label>
       <label>Order <input type="number" name="choiceOrder" [(ngModel)]="choiceForm.order"></label>
       <label class="checkbox-row"><input type="checkbox" name="choiceCorrect" [(ngModel)]="choiceForm.is_correct"> Correct answer</label>
-      <button type="submit">Create choice</button>
+      <button type="submit" [disabled]="questions.length === 0 || choiceForm.question === 0">Create choice</button>
     </form>
 
     <form class="teacher-card" (ngSubmit)="createTask()">
       <h2>Create written task</h2>
+      @if (lessons.length === 0) {
+        <p class="helper-text">Create a lesson first.</p>
+      }
       <label>
         Lesson
-        <select name="taskLesson" [(ngModel)]="taskForm.lesson" required>
+        <select name="taskLesson" [(ngModel)]="taskForm.lesson" [disabled]="lessons.length === 0" required>
           <option [ngValue]="0">Choose lesson</option>
-          @if (lessons$ | async; as lessons) {
-            @for (lesson of lessons; track lesson.id) {
-              <option [ngValue]="lesson.id">{{ lesson.title }} (id {{ lesson.id }})</option>
-            }
+          @for (lesson of lessons; track lesson.id) {
+            <option [ngValue]="lesson.id">{{ lesson.course_title }} / {{ lesson.module_title }} / {{ lesson.title }} (id {{ lesson.id }})</option>
           }
         </select>
       </label>
       <label>Title <input name="taskTitle" [(ngModel)]="taskForm.title" required></label>
       <label>Instructions <textarea name="taskInstructions" [(ngModel)]="taskForm.instructions" rows="4"></textarea></label>
-      <button type="submit">Create task</button>
+      <button type="submit" [disabled]="lessons.length === 0 || taskForm.lesson === 0">Create task</button>
     </form>
 
     <aside class="teacher-card reference-card">
-      <h2>Current ids</h2>
+      <h2>My content</h2>
+      <p>Only these teacher-owned items are available in the creation forms.</p>
       <div class="reference-list">
-        <strong>Courses</strong>
-        @if (courses$ | async; as courses) {
+        <strong>My courses</strong>
+        @if (courses.length > 0) {
           @for (course of courses; track course.id) {
             <span>{{ course.id }} - {{ course.title }}</span>
           }
+        } @else {
+          <span>No courses owned by this teacher yet.</span>
         }
       </div>
       <div class="reference-list">
-        <strong>Modules</strong>
-        @if (modules$ | async; as modules) {
+        <strong>My modules</strong>
+        @if (modules.length > 0) {
           @for (module of modules; track module.id) {
-            <span>{{ module.id }} - {{ module.title }}</span>
+            <span>{{ module.id }} - {{ module.course_title || 'Course' }} / {{ module.title }}</span>
           }
+        } @else {
+          <span>No modules owned by this teacher yet.</span>
         }
       </div>
       <div class="reference-list">
-        <strong>Lessons</strong>
-        @if (lessons$ | async; as lessons) {
+        <strong>My lessons</strong>
+        @if (lessons.length > 0) {
           @for (lesson of lessons; track lesson.id) {
-            <span>{{ lesson.id }} - {{ lesson.title }}</span>
+            <span>{{ lesson.id }} - {{ lesson.course_title }} / {{ lesson.module_title }} / {{ lesson.title }}</span>
           }
+        } @else {
+          <span>No lessons owned by this teacher yet.</span>
+        }
+      </div>
+      <div class="reference-list">
+        <strong>My quizzes</strong>
+        @if (quizzes.length > 0) {
+          @for (quiz of quizzes; track quiz.id) {
+            <span>{{ quiz.id }} - {{ quiz.course_title }} / {{ quiz.lesson_title }} / {{ quiz.title }}</span>
+          }
+        } @else {
+          <span>No quizzes owned by this teacher yet.</span>
+        }
+      </div>
+      <div class="reference-list">
+        <strong>My questions</strong>
+        @if (questions.length > 0) {
+          @for (question of questions; track question.id) {
+            <span>{{ question.id }} - {{ question.quiz_title }} / {{ question.text }}</span>
+          }
+        } @else {
+          <span>No questions owned by this teacher yet.</span>
         }
       </div>
     </aside>
@@ -157,85 +214,81 @@
   <section class="submissions-grid">
     <div class="teacher-card">
       <h2>Enrollment requests</h2>
-      @if (enrollmentRequests$ | async; as requests) {
-        @if (requests.length > 0) {
-          <div class="submission-list">
-            @for (request of requests; track request.id) {
-              <article>
-                <strong>{{ request.student_username }} - {{ request.course.title }}</strong>
-                <span>Status: {{ request.status }}</span>
-                <small>Updated: {{ request.updated_at | date: 'medium' }}</small>
-                @if (request.status === 'pending') {
-                  <div class="inline-actions">
-                    <button type="button" (click)="updateEnrollmentRequest(request.id, 'approve')">Approve</button>
-                    <button type="button" class="danger-button" (click)="updateEnrollmentRequest(request.id, 'reject')">Reject</button>
-                  </div>
-                }
-              </article>
-            }
-          </div>
-        } @else {
-          <p>No enrollment requests yet.</p>
-        }
+      @if (enrollmentRequests.length > 0) {
+        <div class="submission-list">
+          @for (request of enrollmentRequests; track request.id) {
+            <article>
+              <strong>{{ request.student_username }} - {{ request.course.title }}</strong>
+              <span>Status: {{ request.status }}</span>
+              <small>Updated: {{ request.updated_at | date: 'medium' }}</small>
+              @if (request.status === 'pending') {
+                <div class="inline-actions">
+                  <button type="button" [disabled]="updatingRequestId === request.id" (click)="updateEnrollmentRequest(request.id, 'approve')">
+                    {{ updatingRequestId === request.id ? 'Saving...' : 'Approve' }}
+                  </button>
+                  <button type="button" class="danger-button" [disabled]="updatingRequestId === request.id" (click)="updateEnrollmentRequest(request.id, 'reject')">
+                    Reject
+                  </button>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      } @else {
+        <p>No enrollment requests yet.</p>
       }
     </div>
 
     <div class="teacher-card">
       <h2>Student progress in my courses</h2>
-      @if (studentProgress$ | async; as progressItems) {
-        @if (progressItems.length > 0) {
-          <div class="submission-list">
-            @for (item of progressItems; track item.enrollment_id) {
-              <article>
-                <strong>{{ item.student_username }} - {{ item.course_title }}</strong>
-                <span>{{ item.completed_lessons }} of {{ item.total_lessons }} lessons completed</span>
-                <span>Progress: {{ item.percentage }}%</span>
-              </article>
-            }
-          </div>
-        } @else {
-          <p>No approved student enrollments yet.</p>
-        }
+      @if (studentProgress.length > 0) {
+        <div class="submission-list">
+          @for (item of studentProgress; track item.enrollment_id) {
+            <article>
+              <strong>{{ item.student_username }} - {{ item.course_title }}</strong>
+              <span>{{ item.completed_lessons }} of {{ item.total_lessons }} lessons completed</span>
+              <span>Progress: {{ item.percentage }}%</span>
+            </article>
+          }
+        </div>
+      } @else {
+        <p>No approved student enrollments yet.</p>
       }
     </div>
 
     <div class="teacher-card">
       <h2>Quiz submissions from my courses</h2>
-      @if (quizSubmissions$ | async; as submissions) {
-        @if (submissions.length > 0) {
-          <div class="submission-list">
-            @for (submission of submissions; track submission.id) {
-              <article>
-                <strong>{{ submission.student_username }} - {{ submission.quiz_title }}</strong>
-                <span>{{ submission.course_title }} / {{ submission.lesson_title }}</span>
-                <span>Score: {{ submission.score }} / {{ submission.total_questions }}</span>
-                <small>{{ submission.submitted_at | date: 'medium' }}</small>
-              </article>
-            }
-          </div>
-        } @else {
-          <p>No quiz submissions yet.</p>
-        }
+      @if (quizSubmissions.length > 0) {
+        <div class="submission-list">
+          @for (submission of quizSubmissions; track submission.id) {
+            <article>
+              <strong>{{ submission.student_username }} - {{ submission.quiz_title }}</strong>
+              <span>{{ submission.course_title }} / {{ submission.lesson_title }}</span>
+              <span>Score: {{ submission.score }} / {{ submission.total_questions }}</span>
+              <small>{{ submission.submitted_at | date: 'medium' }}</small>
+            </article>
+          }
+        </div>
+      } @else {
+        <p>No quiz submissions yet.</p>
       }
     </div>
 
     <div class="teacher-card">
       <h2>Written task submissions from my courses</h2>
-      @if (taskSubmissions$ | async; as submissions) {
-        @if (submissions.length > 0) {
-          <div class="submission-list">
-            @for (submission of submissions; track submission.id) {
-              <article>
-                <strong>{{ submission.student_username }} - {{ submission.task_title }}</strong>
-                <span>{{ submission.course_title }} / {{ submission.lesson_title }}</span>
-                <p>{{ submission.answer_text }}</p>
-                <small>Status: {{ submission.status }} / Updated: {{ submission.updated_at | date: 'medium' }}</small>
-              </article>
-            }
-          </div>
-        } @else {
-          <p>No written task submissions yet.</p>
-        }
+      @if (taskSubmissions.length > 0) {
+        <div class="submission-list">
+          @for (submission of taskSubmissions; track submission.id) {
+            <article>
+              <strong>{{ submission.student_username }} - {{ submission.task_title }}</strong>
+              <span>{{ submission.course_title }} / {{ submission.lesson_title }}</span>
+              <p>{{ submission.answer_text }}</p>
+              <small>Status: {{ submission.status }} / Updated: {{ submission.updated_at | date: 'medium' }}</small>
+            </article>
+          }
+        </div>
+      } @else {
+        <p>No written task submissions yet.</p>
       }
     </div>
   </section>

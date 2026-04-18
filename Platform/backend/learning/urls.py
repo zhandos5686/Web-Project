@@ -20,6 +20,8 @@ from .views import (
     TeacherQuizQuestionCreateView,
     TeacherQuizSubmissionsView,
     TeacherEnrollmentRequestsView,
+    TeacherMyQuestionsView,
+    TeacherMyQuizzesView,
     TeacherStudentProgressView,
     TeacherTaskCreateView,
     TeacherTaskSubmissionsView,
@@ -42,6 +44,8 @@ urlpatterns = [
     path("teacher/questions/", TeacherQuizQuestionCreateView.as_view(), name="teacher-create-question"),
     path("teacher/choices/", TeacherQuizChoiceCreateView.as_view(), name="teacher-create-choice"),
     path("teacher/tasks/", TeacherTaskCreateView.as_view(), name="teacher-create-task"),
+    path("teacher/my-quizzes/", TeacherMyQuizzesView.as_view(), name="teacher-my-quizzes"),
+    path("teacher/my-questions/", TeacherMyQuestionsView.as_view(), name="teacher-my-questions"),
     path("teacher/enrollment-requests/", TeacherEnrollmentRequestsView.as_view(), name="teacher-enrollment-requests"),
     path(
         "teacher/enrollment-requests/<int:request_id>/<str:action>/",

@@ -56,7 +56,7 @@ class TeacherTaskCreateSerializer(serializers.ModelSerializer):
     def validate_lesson(self, value):
         request = self.context["request"]
         if value.module.course.teacher_id != request.user.id:
-            raise serializers.ValidationError("Teachers can add tasks only to their own lessons.")
+            raise serializers.ValidationError("Ownership error: teachers can add written tasks only to lessons from their own courses.")
         if Task.objects.filter(lesson=value).exists():
             raise serializers.ValidationError("This lesson already has a written task.")
         return value
@@ -98,18 +98,23 @@ class QuizChoiceSerializer(serializers.ModelSerializer):
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
     choices = QuizChoiceSerializer(many=True, read_only=True)
+    quiz_title = serializers.CharField(source="quiz.title", read_only=True)
+    lesson_title = serializers.CharField(source="quiz.lesson.title", read_only=True)
+    course_title = serializers.CharField(source="quiz.lesson.module.course.title", read_only=True)
 
     class Meta:
         model = QuizQuestion
-        fields = ["id", "text", "order", "choices"]
+        fields = ["id", "quiz", "quiz_title", "lesson_title", "course_title", "text", "order", "choices"]
 
 
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuizQuestionSerializer(many=True, read_only=True)
+    lesson_title = serializers.CharField(source="lesson.title", read_only=True)
+    course_title = serializers.CharField(source="lesson.module.course.title", read_only=True)
 
     class Meta:
         model = Quiz
-        fields = ["id", "lesson", "title", "questions"]
+        fields = ["id", "lesson", "lesson_title", "course_title", "title", "questions"]
 
 
 class TeacherQuizCreateSerializer(serializers.ModelSerializer):
@@ -120,7 +125,7 @@ class TeacherQuizCreateSerializer(serializers.ModelSerializer):
     def validate_lesson(self, value):
         request = self.context["request"]
         if value.module.course.teacher_id != request.user.id:
-            raise serializers.ValidationError("Teachers can add quizzes only to their own lessons.")
+            raise serializers.ValidationError("Ownership error: teachers can add quizzes only to lessons from their own courses.")
         if hasattr(value, "quiz"):
             raise serializers.ValidationError("This lesson already has a quiz.")
         return value
@@ -134,7 +139,7 @@ class TeacherQuizQuestionCreateSerializer(serializers.ModelSerializer):
     def validate_quiz(self, value):
         request = self.context["request"]
         if value.lesson.module.course.teacher_id != request.user.id:
-            raise serializers.ValidationError("Teachers can add questions only to their own quizzes.")
+            raise serializers.ValidationError("Ownership error: teachers can add questions only to quizzes from their own courses.")
         return value
 
 
@@ -146,7 +151,7 @@ class TeacherQuizChoiceCreateSerializer(serializers.ModelSerializer):
     def validate_question(self, value):
         request = self.context["request"]
         if value.quiz.lesson.module.course.teacher_id != request.user.id:
-            raise serializers.ValidationError("Teachers can add choices only to their own quiz questions.")
+            raise serializers.ValidationError("Ownership error: teachers can add choices only to questions from their own quizzes.")
         return value
 
 

@@ -1,8 +1,8 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { catchError, map, of, switchMap, tap } from 'rxjs';
+import { catchError, finalize, map, of, switchMap, tap } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
@@ -23,6 +23,7 @@ export class LessonComponent {
   private readonly courseService = inject(CourseService);
   private readonly lessonActivityService = inject(LessonActivityService);
   private readonly progressService = inject(ProgressService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   loadError = false;
   completionMessage = '';
@@ -71,12 +72,14 @@ export class LessonComponent {
       catchError(() => of(null)),
     ).subscribe((quiz) => {
       this.quiz = quiz;
+      this.cdr.detectChanges();
     });
 
     this.lessonActivityService.getTask(lessonId).pipe(
       catchError(() => of(null)),
     ).subscribe((task) => {
       this.task = task;
+      this.cdr.detectChanges();
     });
   }
 
@@ -89,13 +92,21 @@ export class LessonComponent {
     this.isCompleting = true;
     this.completionMessage = '';
 
-    this.progressService.completeLesson(lessonId).subscribe({
+    this.progressService.completeLesson(lessonId).pipe(
+      finalize(() => {
+        this.isCompleting = false;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
       next: (response) => {
         this.completionMessage = response.message;
         this.completionMessageType = response.status === 'completed' ? 'success' : 'info';
+        this.cdr.detectChanges();
       },
       error: (error) => {
         if (error.status === 401) {
+          this.isCompleting = false;
+          this.cdr.detectChanges();
           this.router.navigate(['/auth']);
           return;
         }
@@ -106,9 +117,7 @@ export class LessonComponent {
           this.completionMessage = 'Could not mark this lesson as completed.';
         }
         this.completionMessageType = 'error';
-      },
-      complete: () => {
-        this.isCompleting = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -134,21 +143,26 @@ export class LessonComponent {
     this.quizMessage = '';
     this.quizResult = null;
 
-    this.lessonActivityService.submitQuiz(lessonId, answers).subscribe({
+    this.lessonActivityService.submitQuiz(lessonId, answers).pipe(
+      finalize(() => {
+        this.isSubmittingQuiz = false;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
       next: (result) => {
         this.quizResult = result;
         this.quizMessage = result.message;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         if (error.status === 401) {
+          this.isSubmittingQuiz = false;
+          this.cdr.detectChanges();
           this.router.navigate(['/auth']);
           return;
         }
-
         this.quizMessage = error.error?.message || 'Could not submit quiz answers.';
-      },
-      complete: () => {
-        this.isSubmittingQuiz = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -163,22 +177,27 @@ export class LessonComponent {
     this.taskMessage = '';
     this.taskStatus = '';
 
-    this.lessonActivityService.submitTask(lessonId, this.taskAnswer).subscribe({
+    this.lessonActivityService.submitTask(lessonId, this.taskAnswer).pipe(
+      finalize(() => {
+        this.isSubmittingTask = false;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
       next: (result) => {
         this.taskMessage = result.message;
         this.taskStatus = result.submission.status;
         this.taskAnswer = result.submission.answer_text;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         if (error.status === 401) {
+          this.isSubmittingTask = false;
+          this.cdr.detectChanges();
           this.router.navigate(['/auth']);
           return;
         }
-
         this.taskMessage = error.error?.message || 'Could not submit the task answer.';
-      },
-      complete: () => {
-        this.isSubmittingTask = false;
+        this.cdr.detectChanges();
       },
     });
   }

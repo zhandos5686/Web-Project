@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.db.models import Case, IntegerField, Value, When
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,12 +8,23 @@ from rest_framework.views import APIView
 from courses.models import Course, Lesson
 from users.models import UserProfile
 from users.permissions import IsTeacher
-from .models import Enrollment, EnrollmentRequest, ProgressRecord, Quiz, QuizChoice, QuizSubmission, Task, TaskSubmission
+from .models import (
+    Enrollment,
+    EnrollmentRequest,
+    ProgressRecord,
+    Quiz,
+    QuizChoice,
+    QuizQuestion,
+    QuizSubmission,
+    Task,
+    TaskSubmission,
+)
 from .serializers import (
     CourseProgressSerializer,
     EnrollmentRequestSerializer,
     EnrollmentSerializer,
     ProgressRecordSerializer,
+    QuizQuestionSerializer,
     QuizSerializer,
     QuizSubmissionSerializer,
     TaskSerializer,
@@ -189,9 +201,18 @@ class TeacherEnrollmentRequestsView(APIView):
     def get(self, request):
         enrollment_requests = (
             EnrollmentRequest.objects.filter(course__teacher=request.user)
+            .annotate(
+                status_order=Case(
+                    When(status=EnrollmentRequest.Status.PENDING, then=Value(0)),
+                    When(status=EnrollmentRequest.Status.APPROVED, then=Value(1)),
+                    When(status=EnrollmentRequest.Status.REJECTED, then=Value(2)),
+                    default=Value(3),
+                    output_field=IntegerField(),
+                )
+            )
             .select_related("student", "course", "course__category", "course__teacher")
             .prefetch_related("course__modules__lessons")
-            .order_by("status", "-updated_at")
+            .order_by("status_order", "-updated_at")
         )
         return Response(EnrollmentRequestSerializer(enrollment_requests, many=True).data)
 
@@ -547,6 +568,32 @@ class TeacherQuizChoiceCreateView(generics.CreateAPIView):
 class TeacherTaskCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = TeacherTaskCreateSerializer
+
+
+class TeacherMyQuizzesView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+    serializer_class = QuizSerializer
+
+    def get_queryset(self):
+        return (
+            Quiz.objects.filter(lesson__module__course__teacher=self.request.user)
+            .select_related("lesson", "lesson__module", "lesson__module__course")
+            .prefetch_related("questions__choices")
+            .order_by("lesson__module__course__title", "lesson__module__order", "lesson__order", "id")
+        )
+
+
+class TeacherMyQuestionsView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+    serializer_class = QuizQuestionSerializer
+
+    def get_queryset(self):
+        return (
+            QuizQuestion.objects.filter(quiz__lesson__module__course__teacher=self.request.user)
+            .select_related("quiz", "quiz__lesson", "quiz__lesson__module", "quiz__lesson__module__course")
+            .prefetch_related("choices")
+            .order_by("quiz__lesson__module__course__title", "quiz__lesson__order", "quiz__title", "order", "id")
+        )
 
 
 class TeacherQuizSubmissionsView(APIView):

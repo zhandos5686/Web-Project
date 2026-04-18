@@ -11,6 +11,10 @@ export interface QuizChoice {
 
 export interface QuizQuestion {
   id: number;
+  quiz?: number;
+  quiz_title?: string;
+  lesson_title?: string;
+  course_title?: string;
   text: string;
   order: number;
   choices: QuizChoice[];
@@ -19,6 +23,8 @@ export interface QuizQuestion {
 export interface LessonQuiz {
   id: number;
   lesson: number;
+  lesson_title?: string;
+  course_title?: string;
   title: string;
   questions: QuizQuestion[];
 }

@@ -9,6 +9,9 @@ from .views import (
     TeacherCourseCreateView,
     TeacherLessonCreateView,
     TeacherModuleCreateView,
+    TeacherMyCoursesView,
+    TeacherMyLessonsView,
+    TeacherMyModulesView,
 )
 
 router = DefaultRouter()
@@ -21,5 +24,8 @@ urlpatterns = [
     path("teacher/courses/", TeacherCourseCreateView.as_view(), name="teacher-create-course"),
     path("teacher/modules/", TeacherModuleCreateView.as_view(), name="teacher-create-module"),
     path("teacher/lessons/", TeacherLessonCreateView.as_view(), name="teacher-create-lesson"),
+    path("teacher/my-courses/", TeacherMyCoursesView.as_view(), name="teacher-my-courses"),
+    path("teacher/my-modules/", TeacherMyModulesView.as_view(), name="teacher-my-modules"),
+    path("teacher/my-lessons/", TeacherMyLessonsView.as_view(), name="teacher-my-lessons"),
     path("", include(router.urls)),
 ]

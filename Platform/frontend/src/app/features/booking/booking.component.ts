@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { catchError, finalize, forkJoin, of, Subscription } from 'rxjs';
 
 import { AuthService, AuthUser } from '../../core/services/auth.service';
 import { BookingService, LessonSlot, LiveBooking } from '../../core/services/booking.service';
@@ -16,6 +16,7 @@ import { BookingService, LessonSlot, LiveBooking } from '../../core/services/boo
 export class BookingComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly bookingService = inject(BookingService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   currentUser: AuthUser | null = null;
   private userSubscription?: Subscription;
@@ -45,6 +46,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       if (user && (previousRole !== user.role || previousId !== user.id)) {
         this.reload();
       }
+      this.cdr.detectChanges();
     });
   }
 
@@ -63,15 +65,23 @@ export class BookingComponent implements OnInit, OnDestroy {
       starts_at: this.toIsoDate(this.slotForm.starts_at),
       ends_at: this.toIsoDate(this.slotForm.ends_at),
       meeting_url: this.slotForm.meeting_url,
-    }).subscribe({
+    }).pipe(
+      finalize(() => {
+        this.isCreatingSlot = false;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
       next: (response) => {
         this.message = response.message;
         this.slotForm = { starts_at: '', ends_at: '', meeting_url: '' };
-        this.reload();
+        this.teacherSlots = [response.slot, ...this.teacherSlots].sort(
+          (first, second) => new Date(first.starts_at).getTime() - new Date(second.starts_at).getTime(),
+        );
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.errorMessage = error.error?.non_field_errors?.[0] || error.error?.message || 'Could not create slot.';
-        this.isCreatingSlot = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -79,14 +89,20 @@ export class BookingComponent implements OnInit, OnDestroy {
   deleteSlot(slotId: number): void {
     this.clearMessages();
     this.deletingSlotId = slotId;
-    this.bookingService.deleteSlot(slotId).subscribe({
+    this.bookingService.deleteSlot(slotId).pipe(
+      finalize(() => {
+        this.deletingSlotId = null;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
       next: (response) => {
         this.message = response.message;
-        this.reload();
+        this.teacherSlots = this.teacherSlots.filter((slot) => slot.id !== slotId);
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Could not delete this slot.';
-        this.deletingSlotId = null;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -94,14 +110,23 @@ export class BookingComponent implements OnInit, OnDestroy {
   bookSlot(slotId: number): void {
     this.clearMessages();
     this.bookingSlotId = slotId;
-    this.bookingService.bookSlot(slotId).subscribe({
+    this.bookingService.bookSlot(slotId).pipe(
+      finalize(() => {
+        this.bookingSlotId = null;
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
       next: (response) => {
         this.message = response.message;
-        this.reload();
+        if (response.booking) {
+          this.myBookings = [response.booking, ...this.myBookings];
+        }
+        this.availableSlots = this.availableSlots.filter((slot) => slot.id !== slotId);
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Could not book this slot.';
-        this.bookingSlotId = null;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -112,6 +137,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.isCreatingSlot = false;
       this.deletingSlotId = null;
       this.bookingSlotId = null;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -124,40 +150,44 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   private loadTeacherData(): void {
-    this.bookingService.getTeacherSlots().subscribe({
-      next: (slots) => this.teacherSlots = slots,
-      error: () => this.errorMessage = 'Could not load teacher slots.',
-    });
-    this.bookingService.getTeacherBookings().subscribe({
-      next: (bookings) => this.teacherBookings = bookings,
-      error: () => {
-        this.errorMessage = 'Could not load teacher bookings.';
+    forkJoin({
+      slots: this.bookingService.getTeacherSlots().pipe(catchError(() => of([] as LessonSlot[]))),
+      bookings: this.bookingService.getTeacherBookings().pipe(catchError(() => of([] as LiveBooking[]))),
+    }).pipe(
+      finalize(() => {
         this.finishLoading();
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
+      next: ({ slots, bookings }) => {
+        this.teacherSlots = slots;
+        this.teacherBookings = bookings;
+        this.cdr.detectChanges();
       },
-      complete: () => this.finishLoading(),
     });
   }
 
   private loadStudentData(): void {
-    this.bookingService.getAvailableSlots().subscribe({
-      next: (slots) => this.availableSlots = slots,
-      error: () => this.errorMessage = 'Could not load available slots.',
-    });
-    this.bookingService.getMyBookings().subscribe({
-      next: (bookings) => this.myBookings = bookings,
-      error: () => {
-        this.errorMessage = 'Could not load your booked lessons.';
+    forkJoin({
+      slots: this.bookingService.getAvailableSlots().pipe(catchError(() => of([] as LessonSlot[]))),
+      bookings: this.bookingService.getMyBookings().pipe(catchError(() => of([] as LiveBooking[]))),
+    }).pipe(
+      finalize(() => {
         this.finishLoading();
+        this.cdr.detectChanges();
+      }),
+    ).subscribe({
+      next: ({ slots, bookings }) => {
+        this.availableSlots = slots;
+        this.myBookings = bookings;
+        this.cdr.detectChanges();
       },
-      complete: () => this.finishLoading(),
     });
   }
 
   private finishLoading(): void {
     this.isLoading = false;
-    this.isCreatingSlot = false;
-    this.deletingSlotId = null;
-    this.bookingSlotId = null;
+
   }
 
   private toIsoDate(value: string): string {

@@ -75,6 +75,12 @@
   font-weight: 700;
 }
 
+.teacher-card button:disabled,
+.teacher-card select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .teacher-card > button,
 .teacher-card form button {
   min-height: 40px;
@@ -139,6 +145,14 @@
   margin: 0;
   color: #5d667a;
   line-height: 1.55;
+}
+
+.helper-text {
+  padding: 9px 10px;
+  border-radius: 6px;
+  background: #f3f6fb;
+  color: #344056 !important;
+  font-weight: 700;
 }
 
 .submission-list {
