@@ -1,0 +1,102 @@
+<section class="page lesson-page">
+  @if (lesson$ | async; as lesson) {
+    <a class="back-link" [routerLink]="['/courses', lesson.course_id]">Back to course</a>
+
+    <article class="lesson-card">
+      <div class="lesson-meta">
+        <span>{{ lesson.course_title }}</span>
+        <span>{{ lesson.module_title }}</span>
+      </div>
+      <h1>{{ lesson.title }}</h1>
+      @if (lesson.content) {
+        <p>{{ lesson.content }}</p>
+      }
+
+      @if (lesson.youtube_url) {
+        <div class="youtube-box">
+          <strong>YouTube lesson URL</strong>
+          <a [href]="lesson.youtube_url" target="_blank" rel="noreferrer">{{ lesson.youtube_url }}</a>
+        </div>
+      }
+
+      <div class="completion-actions">
+        <button type="button" [disabled]="isCompleting" (click)="markCompleted(lesson.id)">
+          {{ isCompleting ? 'Saving...' : 'Mark lesson as completed' }}
+        </button>
+        @if (completionMessage) {
+          <span
+            class="completion-message"
+            [class.success]="completionMessageType === 'success'"
+            [class.error]="completionMessageType === 'error'"
+          >
+            {{ completionMessage }}
+          </span>
+        }
+      </div>
+    </article>
+
+    @if (quiz) {
+      <section class="activity-card">
+        <h2>{{ quiz.title }}</h2>
+        <div class="question-list">
+          @for (question of quiz.questions; track question.id) {
+            <fieldset>
+              <legend>{{ question.order }}. {{ question.text }}</legend>
+              @for (choice of question.choices; track choice.id) {
+                <label>
+                  <input
+                    type="radio"
+                    [name]="'question-' + question.id"
+                    [value]="choice.id"
+                    [(ngModel)]="quizAnswers[question.id]"
+                  >
+                  <span>{{ choice.text }}</span>
+                </label>
+              }
+            </fieldset>
+          }
+        </div>
+        <div class="activity-actions">
+          <button type="button" [disabled]="isSubmittingQuiz" (click)="submitQuiz(lesson.id)">
+            {{ isSubmittingQuiz ? 'Submitting...' : 'Submit quiz' }}
+          </button>
+          @if (quizMessage) {
+            <span>{{ quizMessage }}</span>
+          }
+        </div>
+        @if (quizResult) {
+          <p class="result-box">
+            Score: {{ quizResult.score }} / {{ quizResult.total_questions }} ({{ quizResult.percentage }}%)
+          </p>
+        }
+      </section>
+    }
+
+    @if (task) {
+      <section class="activity-card">
+        <h2>{{ task.title }}</h2>
+        <p>{{ task.instructions }}</p>
+        <label class="task-answer">
+          <span>Your answer</span>
+          <textarea [(ngModel)]="taskAnswer" rows="5"></textarea>
+        </label>
+        <div class="activity-actions">
+          <button type="button" [disabled]="isSubmittingTask" (click)="submitTask(lesson.id)">
+            {{ isSubmittingTask ? 'Submitting...' : 'Submit task answer' }}
+          </button>
+          @if (taskMessage) {
+            <span>{{ taskMessage }}</span>
+          }
+        </div>
+        @if (taskStatus) {
+          <p class="result-box">Submission status: {{ taskStatus }}</p>
+        }
+      </section>
+    }
+  } @else if (loadError) {
+    <div class="placeholder-panel">
+      <strong>Lesson not found</strong>
+      <span>Return to the catalog and open an available lesson.</span>
+    </div>
+  }
+</section>

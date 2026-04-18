@@ -1,0 +1,28 @@
+<nav class="navbar" aria-label="Main navigation">
+  <a class="brand" routerLink="/">English Platform</a>
+  <div class="nav-links">
+    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+    <a routerLink="/catalog" routerLinkActive="active">Catalog</a>
+    @if (currentUser$ | async; as user) {
+      @if (user.role === 'student') {
+        <a routerLink="/my-courses" routerLinkActive="active">My Courses</a>
+        <a routerLink="/my-tasks" routerLinkActive="active">My Tasks</a>
+        <a routerLink="/progress" routerLinkActive="active">Progress</a>
+      }
+      <a routerLink="/booking" routerLinkActive="active">Booking</a>
+      @if (user.role === 'teacher') {
+        <a routerLink="/teacher" routerLinkActive="active">Teacher</a>
+      }
+      <a routerLink="/profile" routerLinkActive="active">Profile</a>
+    }
+  </div>
+  @if (currentUser$ | async; as user) {
+    <div class="user-box">
+      <span class="user-name">{{ user.username }}</span>
+      <span class="user-role">{{ user.role }}</span>
+      <button type="button" class="auth-link" (click)="logout()">Logout</button>
+    </div>
+  } @else {
+    <a class="auth-link" routerLink="/auth" routerLinkActive="active">Sign in</a>
+  }
+</nav>

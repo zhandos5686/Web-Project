@@ -1,0 +1,39 @@
+<section class="page progress-page">
+  <div class="page-heading">
+    <h1>Progress</h1>
+    <p>Your completed lessons are calculated for each enrolled course.</p>
+  </div>
+
+  @if (loadError) {
+    <div class="placeholder-panel">
+      <strong>Could not load progress</strong>
+      <span>Please check that you are logged in and the backend is running.</span>
+    </div>
+  }
+
+  @if (progress$ | async; as progressItems) {
+    @if (progressItems.length > 0) {
+      <div class="progress-list">
+        @for (item of progressItems; track item.course_id) {
+          <article class="progress-card">
+            <div>
+              <h2>{{ item.course_title }}</h2>
+              <p>{{ item.completed_lessons }} of {{ item.total_lessons }} lessons completed</p>
+            </div>
+            <strong>{{ item.percentage }}%</strong>
+            <div class="progress-bar" aria-label="Course progress">
+              <span [style.width.%]="item.percentage"></span>
+            </div>
+            <a [routerLink]="['/courses', item.course_id]">Open course</a>
+          </article>
+        }
+      </div>
+    } @else if (!loadError) {
+      <div class="placeholder-panel">
+        <strong>No progress yet</strong>
+        <span>Enroll in a course and complete lessons to see progress here.</span>
+        <a routerLink="/catalog">Go to catalog</a>
+      </div>
+    }
+  }
+</section>

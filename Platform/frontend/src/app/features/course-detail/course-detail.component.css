@@ -1,0 +1,144 @@
+.course-detail-page {
+  display: grid;
+  gap: 24px;
+}
+
+.back-link {
+  width: fit-content;
+  color: #183f8c;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.course-hero {
+  overflow: hidden;
+  border: 1px solid #d8deea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.course-hero img {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  object-fit: cover;
+}
+
+.course-hero-content {
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+}
+
+.course-hero h1,
+.modules-section h2,
+.module-card h3 {
+  margin: 0;
+  color: #172033;
+}
+
+.course-hero p {
+  margin: 0;
+  color: #5d667a;
+  line-height: 1.6;
+}
+
+.enroll-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.enroll-actions button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #1f6b3a;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.enroll-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.enroll-message {
+  color: #4e5870;
+  font-weight: 700;
+}
+
+.enroll-message.success {
+  color: #1f6b3a;
+}
+
+.enroll-message.error {
+  color: #a42222;
+}
+
+.course-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.course-meta span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #edf7f1;
+  color: #1f6b3a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.modules-section {
+  display: grid;
+  gap: 16px;
+}
+
+.module-list {
+  display: grid;
+  gap: 16px;
+}
+
+.module-card {
+  padding: 20px;
+  border: 1px solid #d8deea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.module-card ol {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding-left: 22px;
+}
+
+.module-card li {
+  padding-left: 6px;
+}
+
+.module-card li::marker {
+  color: #183f8c;
+  font-weight: 700;
+}
+
+.module-card p {
+  margin: 4px 0 0;
+  color: #5d667a;
+}
+
+.module-card a {
+  display: inline-flex;
+  margin-top: 8px;
+  color: #183f8c;
+  font-weight: 700;
+}
+
+.muted {
+  color: #5d667a;
+}

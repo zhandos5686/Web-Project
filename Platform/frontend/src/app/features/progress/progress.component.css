@@ -1,0 +1,68 @@
+.progress-page {
+  display: grid;
+  gap: 24px;
+}
+
+.page-heading {
+  max-width: 760px;
+}
+
+.progress-list {
+  display: grid;
+  gap: 16px;
+}
+
+.progress-card {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #d8deea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.progress-card h2 {
+  margin: 0 0 6px;
+  color: #172033;
+  font-size: 22px;
+}
+
+.progress-card p {
+  margin: 0;
+  color: #5d667a;
+}
+
+.progress-card strong {
+  color: #1f6b3a;
+  font-size: 28px;
+}
+
+.progress-bar {
+  overflow: hidden;
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: #e4e9f2;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #1f6b3a;
+}
+
+.progress-card a,
+.placeholder-panel a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: #183f8c;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}

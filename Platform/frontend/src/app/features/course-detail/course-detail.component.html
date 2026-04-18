@@ -1,0 +1,76 @@
+<section class="page course-detail-page">
+  <a class="back-link" routerLink="/catalog">Back to catalog</a>
+
+  @if (course$ | async; as course) {
+    <header class="course-hero">
+      @if (course.image_url) {
+        <img [src]="course.image_url" [alt]="course.title">
+      }
+      <div class="course-hero-content">
+        <div class="course-meta">
+          <span>{{ course.level || 'Any level' }}</span>
+          <span>{{ course.category?.name || 'General English' }}</span>
+          @if (course.teacher_name) {
+            <span>Teacher: {{ course.teacher_name }}</span>
+          }
+        </div>
+        <h1>{{ course.title }}</h1>
+        <p>{{ course.description }}</p>
+        <div class="enroll-actions">
+          <button type="button" [disabled]="isEnrolling" (click)="enroll(course.id)">
+            {{ isEnrolling ? 'Enrolling...' : 'Enroll in course' }}
+          </button>
+          @if (enrollMessage) {
+            <span class="enroll-message" [class.success]="enrollMessageType === 'success'" [class.error]="enrollMessageType === 'error'">
+              {{ enrollMessage }}
+            </span>
+          }
+        </div>
+      </div>
+    </header>
+
+    <section class="modules-section" aria-labelledby="modules-title">
+      <h2 id="modules-title">Modules and lessons</h2>
+
+      @if (course.modules.length > 0) {
+        <div class="module-list">
+          @for (module of course.modules; track module.id) {
+            <article class="module-card">
+              <h3>{{ module.order }}. {{ module.title }}</h3>
+              @if (module.lessons.length > 0) {
+                <ol>
+                  @for (lesson of module.lessons; track lesson.id) {
+                    <li>
+                      <div>
+                        <strong>{{ lesson.title }}</strong>
+                        @if (lesson.content) {
+                          <p>{{ lesson.content }}</p>
+                        }
+                      </div>
+                      @if (lesson.youtube_url) {
+                        <a [href]="lesson.youtube_url" target="_blank" rel="noreferrer">YouTube lesson</a>
+                      }
+                      <a [routerLink]="['/lessons', lesson.id]">Open lesson page</a>
+                    </li>
+                  }
+                </ol>
+              } @else {
+                <p class="muted">No lessons in this module yet.</p>
+              }
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="placeholder-panel">
+          <strong>No modules yet</strong>
+          <span>This course exists, but modules will be added later.</span>
+        </div>
+      }
+    </section>
+  } @else if (loadError) {
+    <div class="placeholder-panel">
+      <strong>Course not found</strong>
+      <span>Return to the catalog and choose an available course.</span>
+    </div>
+  }
+</section>

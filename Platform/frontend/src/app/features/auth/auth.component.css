@@ -1,0 +1,85 @@
+.auth-page {
+  display: grid;
+  gap: 24px;
+}
+
+.auth-header {
+  max-width: 760px;
+}
+
+.auth-card {
+  width: min(520px, 100%);
+  padding: 24px;
+  border: 1px solid #d8deea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mode-tabs button,
+.auth-form button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.mode-tabs button {
+  background: #edf1f7;
+  color: #4e5870;
+}
+
+.mode-tabs button.active {
+  background: #183f8c;
+  color: #ffffff;
+}
+
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 6px;
+  color: #344056;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.auth-form input,
+.auth-form select,
+.auth-form textarea {
+  width: 100%;
+  border: 1px solid #c9d1df;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #172033;
+  font: inherit;
+}
+
+.auth-form button {
+  background: #1f6b3a;
+  color: #ffffff;
+}
+
+.auth-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.error-message {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fff0f0;
+  color: #a42222;
+  font-weight: 700;
+}

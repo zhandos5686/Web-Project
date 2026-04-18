@@ -1,0 +1,77 @@
+<section class="page my-courses-page">
+  <div class="page-heading">
+    <h1>My Courses</h1>
+    <p>Approved courses are shown here. New enrollments wait for teacher approval first.</p>
+  </div>
+
+  @if (loadError) {
+    <div class="placeholder-panel">
+      <strong>Could not load your courses</strong>
+      <span>Please check that you are logged in and the backend is running.</span>
+    </div>
+  }
+
+  @if (enrollments$ | async; as enrollments) {
+    @if (enrollments.length > 0) {
+      <div class="course-grid">
+        @for (enrollment of enrollments; track enrollment.id) {
+          <article class="course-card">
+            @if (enrollment.course.image_url) {
+              <img [src]="enrollment.course.image_url" [alt]="enrollment.course.title">
+            }
+            <div class="course-card-body">
+              <div class="course-meta">
+                <span>{{ enrollment.course.level || 'Any level' }}</span>
+                <span>{{ enrollment.course.category?.name || 'General English' }}</span>
+              </div>
+              <h2>{{ enrollment.course.title }}</h2>
+              <p>{{ enrollment.course.description }}</p>
+              <small>Enrolled: {{ enrollment.created_at | date: 'mediumDate' }}</small>
+              <a [routerLink]="['/courses', enrollment.course.id]">Open course</a>
+            </div>
+          </article>
+        }
+      </div>
+    } @else if (!loadError) {
+      <div class="placeholder-panel">
+        <strong>No enrolled courses yet</strong>
+        <span>Open the catalog, choose a course, and send an enrollment request.</span>
+        <a routerLink="/catalog">Go to catalog</a>
+      </div>
+    }
+  }
+
+  <section class="requests-section">
+    <h2>Enrollment requests</h2>
+
+    @if (requestLoadError) {
+      <div class="placeholder-panel">
+        <strong>Could not load enrollment requests</strong>
+        <span>Please check that the backend is running.</span>
+      </div>
+    }
+
+    @if (requests$ | async; as requests) {
+      @if (requests.length > 0) {
+        <div class="request-list">
+          @for (request of requests; track request.id) {
+            <article class="request-card">
+              <div>
+                <strong>{{ request.course.title }}</strong>
+                <span>Requested: {{ request.created_at | date: 'mediumDate' }}</span>
+              </div>
+              <span class="status-pill" [class.rejected]="request.status === 'rejected'">
+                {{ request.status }}
+              </span>
+            </article>
+          }
+        </div>
+      } @else if (!requestLoadError) {
+        <div class="placeholder-panel">
+          <strong>No enrollment requests yet</strong>
+          <span>Requests you send from course detail pages will appear here.</span>
+        </div>
+      }
+    }
+  </section>
+</section>

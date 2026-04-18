@@ -1,0 +1,117 @@
+.my-courses-page {
+  display: grid;
+  gap: 24px;
+}
+
+.page-heading {
+  max-width: 760px;
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.course-card {
+  overflow: hidden;
+  border: 1px solid #d8deea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.course-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.course-card-body {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.course-card h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.course-card p,
+.course-card small {
+  margin: 0;
+  color: #5d667a;
+}
+
+.course-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.course-meta span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #edf7f1;
+  color: #1f6b3a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.course-card a,
+.placeholder-panel a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 6px;
+  background: #183f8c;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.requests-section {
+  display: grid;
+  gap: 14px;
+}
+
+.requests-section h2 {
+  margin: 0;
+  color: #172033;
+}
+
+.request-list {
+  display: grid;
+  gap: 10px;
+}
+
+.request-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #d8deea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.request-card div {
+  display: grid;
+  gap: 4px;
+}
+
+.request-card span {
+  color: #5d667a;
+}
+
+.status-pill.rejected {
+  background: #fff0f0;
+  color: #a42222;
+}
