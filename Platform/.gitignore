@@ -1,4 +1,3 @@
-cat > Platform/.gitignore <<'EOF'
 .idea/
 .venv/
 __pycache__/
@@ -9,4 +8,6 @@ dist/
 .angular/
 .env
 .DS_Store
-EOF
+coverage/
+.pytest_cache/
+htmlcov/
