@@ -2,23 +2,36 @@
   @if (lesson$ | async; as lesson) {
     <a class="back-link" [routerLink]="['/courses', lesson.course_id]">Back to course</a>
 
-    <article class="lesson-card">
-      <div class="lesson-meta">
+    <article class="lesson-card lesson-hero">
+      <div class="lesson-kicker">Lesson workspace</div>
+      <div class="lesson-meta" aria-label="Lesson context">
         <span>{{ lesson.course_title }}</span>
         <span>{{ lesson.module_title }}</span>
       </div>
       <h1>{{ lesson.title }}</h1>
       @if (lesson.content) {
-        <p>{{ lesson.content }}</p>
+        <p class="lesson-content">{{ lesson.content }}</p>
       }
 
       @if (lesson.youtube_url) {
         <div class="youtube-box">
-          <strong>YouTube lesson URL</strong>
-          <a [href]="lesson.youtube_url" target="_blank" rel="noreferrer">{{ lesson.youtube_url }}</a>
+          <div>
+            <strong>Video lesson</strong>
+            <span>Open the YouTube material in a new tab.</span>
+          </div>
+          <a class="secondary-button" [href]="lesson.youtube_url" target="_blank" rel="noreferrer">YouTube lesson</a>
         </div>
       }
+    </article>
 
+    <section class="activity-card completion-card">
+      <div class="section-heading">
+        <span class="section-label">Step 1</span>
+        <div>
+          <h2>Complete the lesson</h2>
+          <p>Use this when you have watched/read the lesson material.</p>
+        </div>
+      </div>
       <div class="completion-actions">
         <button type="button" [disabled]="isCompleting" (click)="markCompleted(lesson.id)">
           {{ isCompleting ? 'Saving...' : 'Mark lesson as completed' }}
@@ -33,17 +46,23 @@
           </span>
         }
       </div>
-    </article>
+    </section>
 
     @if (quiz) {
-      <section class="activity-card">
-        <h2>{{ quiz.title }}</h2>
+      <section class="activity-card quiz-card">
+        <div class="section-heading">
+          <span class="section-label">Step 2</span>
+          <div>
+            <h2>{{ quiz.title }}</h2>
+            <p>Choose one answer for each question, then submit your quiz.</p>
+          </div>
+        </div>
         <div class="question-list">
           @for (question of quiz.questions; track question.id) {
-            <fieldset>
+            <fieldset class="question-card">
               <legend>{{ question.order }}. {{ question.text }}</legend>
               @for (choice of question.choices; track choice.id) {
-                <label>
+                <label class="choice-row">
                   <input
                     type="radio"
                     [name]="'question-' + question.id"
@@ -61,35 +80,49 @@
             {{ isSubmittingQuiz ? 'Submitting...' : 'Submit quiz' }}
           </button>
           @if (quizMessage) {
-            <span>{{ quizMessage }}</span>
+            <span class="activity-message">{{ quizMessage }}</span>
           }
         </div>
         @if (quizResult) {
-          <p class="result-box">
-            Score: {{ quizResult.score }} / {{ quizResult.total_questions }} ({{ quizResult.percentage }}%)
-          </p>
+          <div class="result-box quiz-result">
+            <span>Quiz result</span>
+            <strong>{{ quizResult.score }} / {{ quizResult.total_questions }}</strong>
+            <small>{{ quizResult.percentage }}%</small>
+          </div>
         }
       </section>
     }
 
     @if (task) {
-      <section class="activity-card">
-        <h2>{{ task.title }}</h2>
-        <p>{{ task.instructions }}</p>
+      <section class="activity-card task-card">
+        <div class="section-heading">
+          <span class="section-label">Step 3</span>
+          <div>
+            <h2>{{ task.title }}</h2>
+            <p>Write a short answer for teacher review.</p>
+          </div>
+        </div>
+        <div class="task-instructions">
+          <strong>Instructions</strong>
+          <p>{{ task.instructions }}</p>
+        </div>
         <label class="task-answer">
           <span>Your answer</span>
-          <textarea [(ngModel)]="taskAnswer" rows="5"></textarea>
+          <textarea [(ngModel)]="taskAnswer" rows="6" placeholder="Type your written task answer here..."></textarea>
         </label>
         <div class="activity-actions">
           <button type="button" [disabled]="isSubmittingTask" (click)="submitTask(lesson.id)">
             {{ isSubmittingTask ? 'Submitting...' : 'Submit task answer' }}
           </button>
           @if (taskMessage) {
-            <span>{{ taskMessage }}</span>
+            <span class="activity-message">{{ taskMessage }}</span>
           }
         </div>
         @if (taskStatus) {
-          <p class="result-box">Submission status: {{ taskStatus }}</p>
+          <div class="result-box task-result">
+            <span>Submission status</span>
+            <strong>{{ taskStatus }}</strong>
+          </div>
         }
       </section>
     }

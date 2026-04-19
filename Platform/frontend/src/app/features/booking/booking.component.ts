@@ -26,6 +26,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   isCreatingSlot = false;
   deletingSlotId: number | null = null;
   bookingSlotId: number | null = null;
+  expandedBookedSlotId: number | null = null;
 
   slotForm = {
     starts_at: '',
@@ -37,6 +38,14 @@ export class BookingComponent implements OnInit, OnDestroy {
   teacherBookings: LiveBooking[] = [];
   availableSlots: LessonSlot[] = [];
   myBookings: LiveBooking[] = [];
+
+  get teacherAvailableSlots(): LessonSlot[] {
+    return this.teacherSlots.filter((slot) => slot.is_available && !slot.booking);
+  }
+
+  get teacherBookedSlots(): LessonSlot[] {
+    return this.teacherSlots.filter((slot) => !slot.is_available || !!slot.booking);
+  }
 
   ngOnInit(): void {
     this.userSubscription = this.authService.currentUser$.subscribe((user) => {
@@ -98,6 +107,9 @@ export class BookingComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.message = response.message;
         this.teacherSlots = this.teacherSlots.filter((slot) => slot.id !== slotId);
+        if (this.expandedBookedSlotId === slotId) {
+          this.expandedBookedSlotId = null;
+        }
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -137,6 +149,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.isCreatingSlot = false;
       this.deletingSlotId = null;
       this.bookingSlotId = null;
+      this.expandedBookedSlotId = null;
       this.cdr.detectChanges();
       return;
     }
@@ -150,18 +163,16 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   private loadTeacherData(): void {
-    forkJoin({
-      slots: this.bookingService.getTeacherSlots().pipe(catchError(() => of([] as LessonSlot[]))),
-      bookings: this.bookingService.getTeacherBookings().pipe(catchError(() => of([] as LiveBooking[]))),
-    }).pipe(
+    this.bookingService.getTeacherSlots().pipe(
+      catchError(() => of([] as LessonSlot[])),
       finalize(() => {
         this.finishLoading();
         this.cdr.detectChanges();
       }),
     ).subscribe({
-      next: ({ slots, bookings }) => {
+      next: (slots) => {
         this.teacherSlots = slots;
-        this.teacherBookings = bookings;
+        this.teacherBookings = [];
         this.cdr.detectChanges();
       },
     });
@@ -188,6 +199,11 @@ export class BookingComponent implements OnInit, OnDestroy {
   private finishLoading(): void {
     this.isLoading = false;
 
+  }
+
+  toggleBookedSlot(slotId: number): void {
+    this.expandedBookedSlotId = this.expandedBookedSlotId === slotId ? null : slotId;
+    this.cdr.detectChanges();
   }
 
   private toIsoDate(value: string): string {

@@ -13,11 +13,44 @@
       @if (user.role === 'teacher') {
         <a routerLink="/teacher" routerLinkActive="active">Teacher</a>
       }
+      <a routerLink="/notifications" routerLinkActive="active">Notifications</a>
       <a routerLink="/profile" routerLinkActive="active">Profile</a>
     }
   </div>
   @if (currentUser$ | async; as user) {
     <div class="user-box">
+      <div class="notification-menu">
+        <button type="button" class="notification-button" (click)="toggleNotifications()" aria-label="Notifications">
+          <svg class="notification-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 10.5c0-3.1-1.7-5.4-4.5-6.1V3a1.5 1.5 0 0 0-3 0v1.4C7.7 5.1 6 7.4 6 10.5V15l-1.4 2.1a.9.9 0 0 0 .8 1.4h13.2a.9.9 0 0 0 .8-1.4L18 15v-4.5Z" />
+            <path d="M9.8 19.5a2.4 2.4 0 0 0 4.4 0" />
+          </svg>
+          @if (unreadCount > 0) {
+            <span class="notification-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          }
+        </button>
+        @if (isNotificationDropdownOpen) {
+          <div class="notification-dropdown">
+            <div class="notification-dropdown-heading">
+              <strong>Notifications</strong>
+              <a routerLink="/notifications" (click)="closeNotifications()">View all</a>
+            </div>
+            @if (notifications.length > 0) {
+              <div class="notification-preview-list">
+                @for (notification of notifications; track notification.id) {
+                  <button type="button" class="notification-preview" [class.unread]="!notification.is_read" (click)="markRead(notification)">
+                    <strong>{{ notification.title }}</strong>
+                    <span>{{ notification.message }}</span>
+                    <small>{{ notification.created_at | date: 'short' }}</small>
+                  </button>
+                }
+              </div>
+            } @else {
+              <p>No notifications yet.</p>
+            }
+          </div>
+        }
+      </div>
       <span class="user-name">{{ user.username }}</span>
       <span class="user-role">{{ user.role }}</span>
       <button type="button" class="auth-link" (click)="logout()">Logout</button>

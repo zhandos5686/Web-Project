@@ -4,7 +4,9 @@
   @if (course$ | async; as course) {
     <header class="course-hero">
       @if (course.image_url) {
-        <img [src]="course.image_url" [alt]="course.title">
+        <div class="course-hero-media">
+          <img [src]="course.image_url" [alt]="course.title">
+        </div>
       }
       <div class="course-hero-content">
         <div class="course-meta">
@@ -14,43 +16,65 @@
             <span>Teacher: {{ course.teacher_name }}</span>
           }
         </div>
-        <h1>{{ course.title }}</h1>
-        <p>{{ course.description }}</p>
-        <div class="enroll-actions">
-          <button type="button" [disabled]="isEnrolling" (click)="enroll(course.id)">
-            {{ isEnrolling ? 'Enrolling...' : 'Enroll in course' }}
-          </button>
-          @if (enrollMessage) {
-            <span class="enroll-message" [class.success]="enrollMessageType === 'success'" [class.error]="enrollMessageType === 'error'">
-              {{ enrollMessage }}
-            </span>
-          }
+        <div class="course-title-block">
+          <h1>{{ course.title }}</h1>
+          <p>{{ course.description }}</p>
         </div>
+        @if (currentUser$ | async; as user) {
+          @if (user.role === 'student') {
+            <div class="enroll-actions">
+              <button type="button" [disabled]="isEnrolling" (click)="enroll(course.id)">
+                {{ isEnrolling ? 'Enrolling...' : 'Enroll in course' }}
+              </button>
+              @if (enrollMessage) {
+                <span class="enroll-message" [class.success]="enrollMessageType === 'success'" [class.error]="enrollMessageType === 'error'">
+                  {{ enrollMessage }}
+                </span>
+              }
+            </div>
+          } @else {
+            <p class="teacher-enroll-note">Teachers cannot enroll in courses.</p>
+          }
+        } @else {
+          <div class="enroll-actions">
+            <button type="button" [disabled]="isEnrolling" (click)="enroll(course.id)">
+              Sign in to request enrollment
+            </button>
+          </div>
+        }
       </div>
     </header>
 
     <section class="modules-section" aria-labelledby="modules-title">
-      <h2 id="modules-title">Modules and lessons</h2>
+      <div class="modules-heading">
+        <h2 id="modules-title">Modules and lessons</h2>
+        <p>Open each lesson page for video, quiz, written task, and completion tracking.</p>
+      </div>
 
       @if (course.modules.length > 0) {
         <div class="module-list">
           @for (module of course.modules; track module.id) {
             <article class="module-card">
-              <h3>{{ module.order }}. {{ module.title }}</h3>
+              <div class="module-heading">
+                <span>Module {{ module.order }}</span>
+                <h3>{{ module.title }}</h3>
+              </div>
               @if (module.lessons.length > 0) {
                 <ol>
                   @for (lesson of module.lessons; track lesson.id) {
-                    <li>
-                      <div>
+                    <li class="lesson-item">
+                      <div class="lesson-copy">
                         <strong>{{ lesson.title }}</strong>
                         @if (lesson.content) {
                           <p>{{ lesson.content }}</p>
                         }
                       </div>
-                      @if (lesson.youtube_url) {
-                        <a [href]="lesson.youtube_url" target="_blank" rel="noreferrer">YouTube lesson</a>
-                      }
-                      <a [routerLink]="['/lessons', lesson.id]">Open lesson page</a>
+                      <div class="lesson-actions">
+                        @if (lesson.youtube_url) {
+                          <a class="lesson-action secondary-action" [href]="lesson.youtube_url" target="_blank" rel="noreferrer">YouTube lesson</a>
+                        }
+                        <a class="lesson-action primary-action" [routerLink]="['/lessons', lesson.id]">Open lesson page</a>
+                      </div>
                     </li>
                   }
                 </ol>

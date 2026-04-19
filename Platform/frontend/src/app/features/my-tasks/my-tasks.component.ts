@@ -36,6 +36,17 @@ import { LessonActivityService } from '../../core/services/lesson-activity.servi
                   <span class="status-pill">{{ submission.status }}</span>
                 </div>
                 <p class="answer-preview">{{ submission.answer_text }}</p>
+                @if (submission.status === 'reviewed') {
+                  <p><strong>Score:</strong> {{ submission.score }} / 100</p>
+                  @if (submission.teacher_feedback) {
+                    <p><strong>Teacher feedback:</strong> {{ submission.teacher_feedback }}</p>
+                  }
+                  @if (submission.reviewed_at) {
+                    <small>Reviewed: {{ submission.reviewed_at | date: 'medium' }}</small>
+                  }
+                } @else {
+                  <p>Your answer is waiting for teacher review.</p>
+                }
                 <small>Updated: {{ submission.updated_at | date: 'medium' }}</small>
                 <a class="primary-link" [routerLink]="['/lessons', submission.lesson_id]">Open lesson</a>
               </article>

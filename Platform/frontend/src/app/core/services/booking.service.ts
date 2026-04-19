@@ -11,6 +11,13 @@ export interface LessonSlot {
   ends_at: string;
   meeting_url: string;
   is_available: boolean;
+  booking?: SlotBookingSummary | null;
+}
+
+export interface SlotBookingSummary {
+  id: number;
+  student_username: string;
+  created_at: string;
 }
 
 export interface LiveBooking {

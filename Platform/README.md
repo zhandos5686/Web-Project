@@ -10,7 +10,7 @@ The project uses Django REST Framework for the backend API and Angular for the f
 - Database: SQLite for local development and defense demo
 
 ## Implemented V1 Scope
-- Authentication with register, login, current user, and logout.
+- Authentication with register, login, current user, logout, and password reset.
 - Student and teacher roles through `UserProfile`.
 - Course catalog with demo categories, courses, modules, lessons, and YouTube URLs.
 - Course detail page with nested modules and lesson links.
@@ -18,18 +18,17 @@ The project uses Django REST Framework for the backend API and Angular for the f
 - Lesson page with completion tracking.
 - Progress page with per-course percentage.
 - Lesson quiz submission with score calculation.
-- Written task submission and My Tasks history.
+- Written task submission, My Tasks history, and teacher review with score/feedback.
 - Teacher dashboard for creating courses, modules, lessons, quizzes, questions, choices, and written tasks.
 - Teacher view of enrollment requests, student progress, quiz submissions, and written task submissions for their own courses.
 - Booking page where teachers create/delete available live lesson slots with meeting links and students book them.
+- In-app notifications for booking, written task submission, and task review events.
 - Demo seed command with realistic content and demo accounts.
 
 ## Intentionally Not Included In V1
 - AI features.
 - Payments.
-- Notifications.
 - Calendar integrations.
-- Teacher grading UI for written tasks.
 - Course update/delete UI.
 - Booking cancellation/rescheduling for already booked slots.
 - Production deployment settings.
@@ -80,9 +79,20 @@ python manage.py seed_demo_data
 
 ## Main API Areas
 - Auth: `/api/users/auth/...`
+- Password reset request: `/api/users/auth/forgot-password/`
+- Password reset confirm: `/api/users/auth/reset-password/`
 - Catalog and lessons: `/api/courses/...`
 - Learning: `/api/learning/...`
 - Booking: `/api/booking/...`
+
+## Password Reset Demo Flow
+The backend uses Django's built-in password reset token generator with a base64 encoded user id.
+In local development, email uses Django's console email backend by default, so the reset link is printed in the backend terminal.
+When `DEBUG=True`, the forgot-password API response also includes `reset_url` to make defense/demo testing easier.
+
+Frontend routes:
+- `/forgot-password`: request a reset link by email.
+- `/reset-password?uid=...&token=...`: set a new password from the generated link.
 
 Angular sends API requests through service classes. The API prefix interceptor adds the backend base URL and the auth interceptor behavior is handled by the existing API prefix/token setup.
 

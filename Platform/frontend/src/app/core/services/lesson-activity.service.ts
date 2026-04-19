@@ -5,7 +5,13 @@ import { ApiService } from './api.service';
 
 export interface QuizChoice {
   id: number;
+  question?: number;
+  question_text?: string;
+  quiz_title?: string;
+  lesson_title?: string;
+  course_title?: string;
   text: string;
+  is_correct?: boolean;
   order: number;
 }
 
@@ -45,6 +51,8 @@ export interface QuizResult {
 export interface LessonTask {
   id: number;
   lesson: number;
+  lesson_title?: string;
+  course_title?: string;
   title: string;
   instructions: string;
 }
@@ -58,8 +66,10 @@ export interface TaskSubmissionResult {
     answer_text: string;
     status: string;
     score: number | null;
+    teacher_feedback: string;
     submitted_at: string;
     updated_at: string;
+    reviewed_at: string | null;
   };
 }
 
@@ -75,8 +85,10 @@ export interface MyTaskSubmission {
   answer_text: string;
   status: string;
   score: number | null;
+  teacher_feedback: string;
   submitted_at: string;
   updated_at: string;
+  reviewed_at: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -1,7 +1,7 @@
 <section class="page teacher-page">
   <div class="page-heading">
     <h1>Teacher Dashboard</h1>
-    <p>Create content, approve students, and review learning activity for your courses.</p>
+    <p>Create course content, approve enrollment requests, and review student learning activity.</p>
   </div>
 
   @if (message) {
@@ -14,282 +14,522 @@
     <div class="message">Loading teacher dashboard data...</div>
   }
 
-  <div class="dashboard-grid">
-    <aside class="teacher-card guide-card">
-      <h2>How content creation works</h2>
-      <ol>
-        <li>Create a course.</li>
-        <li>Create a module inside that course.</li>
-        <li>Create a lesson inside that module.</li>
-        <li>Create one quiz and one written task for the lesson.</li>
-        <li>Add questions and choices to the quiz.</li>
-      </ol>
-      <p>Quiz belongs to a lesson, not directly to a course. A course contains modules, and modules contain lessons.</p>
-      <p>The forms below use only content owned by the logged-in teacher.</p>
-    </aside>
-
-    <form class="teacher-card" (ngSubmit)="createCourse()">
-      <h2>Create course</h2>
-      <label>Title <input name="courseTitle" [(ngModel)]="courseForm.title" required></label>
-      <label>Description <textarea name="courseDescription" [(ngModel)]="courseForm.description" rows="3"></textarea></label>
-      <label>Level <input name="courseLevel" [(ngModel)]="courseForm.level"></label>
-      <label>Category <input name="courseCategory" [(ngModel)]="courseForm.category_name"></label>
-      <label>Image URL <input name="courseImage" [(ngModel)]="courseForm.image_url"></label>
-      <label class="checkbox-row"><input type="checkbox" name="coursePublished" [(ngModel)]="courseForm.is_published"> Published</label>
-      <button type="submit">Create course</button>
-    </form>
-
-    <form class="teacher-card" (ngSubmit)="createModule()">
-      <h2>Create module</h2>
-      @if (courses.length === 0) {
-        <p class="helper-text">Create a course first.</p>
-      }
-      <label>
-        Course
-        <select name="moduleCourse" [(ngModel)]="moduleForm.course" [disabled]="courses.length === 0" required>
-          <option [ngValue]="0">Choose course</option>
-          @for (course of courses; track course.id) {
-            <option [ngValue]="course.id">{{ course.title }} (id {{ course.id }})</option>
-          }
-        </select>
-      </label>
-      <label>Title <input name="moduleTitle" [(ngModel)]="moduleForm.title" required></label>
-      <label>Order <input type="number" name="moduleOrder" [(ngModel)]="moduleForm.order"></label>
-      <button type="submit" [disabled]="courses.length === 0 || moduleForm.course === 0">Create module</button>
-    </form>
-
-    <form class="teacher-card" (ngSubmit)="createLesson()">
-      <h2>Create lesson</h2>
-      @if (modules.length === 0) {
-        <p class="helper-text">Create a module first.</p>
-      }
-      <label>
-        Module
-        <select name="lessonModule" [(ngModel)]="lessonForm.module" [disabled]="modules.length === 0" required>
-          <option [ngValue]="0">Choose module</option>
-          @for (module of modules; track module.id) {
-            <option [ngValue]="module.id">{{ module.course_title || 'Course' }} / {{ module.title }} (id {{ module.id }})</option>
-          }
-        </select>
-      </label>
-      <label>Title <input name="lessonTitle" [(ngModel)]="lessonForm.title" required></label>
-      <label>YouTube URL <input name="lessonYoutube" [(ngModel)]="lessonForm.youtube_url"></label>
-      <label>Content <textarea name="lessonContent" [(ngModel)]="lessonForm.content" rows="4"></textarea></label>
-      <label>Order <input type="number" name="lessonOrder" [(ngModel)]="lessonForm.order"></label>
-      <button type="submit" [disabled]="modules.length === 0 || lessonForm.module === 0">Create lesson</button>
-    </form>
-
-    <form class="teacher-card" (ngSubmit)="createQuiz()">
-      <h2>Create quiz</h2>
-      @if (lessons.length === 0) {
-        <p class="helper-text">Create a lesson first.</p>
-      }
-      <label>
-        Lesson
-        <select name="quizLesson" [(ngModel)]="quizForm.lesson" [disabled]="lessons.length === 0" required>
-          <option [ngValue]="0">Choose lesson</option>
-          @for (lesson of lessons; track lesson.id) {
-            <option [ngValue]="lesson.id">{{ lesson.course_title }} / {{ lesson.module_title }} / {{ lesson.title }} (id {{ lesson.id }})</option>
-          }
-        </select>
-      </label>
-      <label>Title <input name="quizTitle" [(ngModel)]="quizForm.title" required></label>
-      <button type="submit" [disabled]="lessons.length === 0 || quizForm.lesson === 0">Create quiz</button>
-    </form>
-
-    <form class="teacher-card" (ngSubmit)="createQuestion()">
-      <h2>Create question</h2>
-      @if (quizzes.length === 0) {
-        <p class="helper-text">Create a quiz first.</p>
-      }
-      <label>
-        Quiz
-        <select name="questionQuiz" [(ngModel)]="questionForm.quiz" [disabled]="quizzes.length === 0" required>
-          <option [ngValue]="0">Choose quiz</option>
-          @for (quiz of quizzes; track quiz.id) {
-            <option [ngValue]="quiz.id">{{ quiz.course_title }} / {{ quiz.lesson_title }} / {{ quiz.title }} (id {{ quiz.id }})</option>
-          }
-        </select>
-      </label>
-      <label>Question text <textarea name="questionText" [(ngModel)]="questionForm.text" rows="3" required></textarea></label>
-      <label>Order <input type="number" name="questionOrder" [(ngModel)]="questionForm.order"></label>
-      <button type="submit" [disabled]="quizzes.length === 0 || questionForm.quiz === 0">Create question</button>
-    </form>
-
-    <form class="teacher-card" (ngSubmit)="createChoice()">
-      <h2>Create choice</h2>
-      @if (questions.length === 0) {
-        <p class="helper-text">Create a question first.</p>
-      }
-      <label>
-        Question
-        <select name="choiceQuestion" [(ngModel)]="choiceForm.question" [disabled]="questions.length === 0" required>
-          <option [ngValue]="0">Choose question</option>
-          @for (question of questions; track question.id) {
-            <option [ngValue]="question.id">{{ question.course_title }} / {{ question.quiz_title }} / {{ question.text }} (id {{ question.id }})</option>
-          }
-        </select>
-      </label>
-      <label>Choice text <input name="choiceText" [(ngModel)]="choiceForm.text" required></label>
-      <label>Order <input type="number" name="choiceOrder" [(ngModel)]="choiceForm.order"></label>
-      <label class="checkbox-row"><input type="checkbox" name="choiceCorrect" [(ngModel)]="choiceForm.is_correct"> Correct answer</label>
-      <button type="submit" [disabled]="questions.length === 0 || choiceForm.question === 0">Create choice</button>
-    </form>
-
-    <form class="teacher-card" (ngSubmit)="createTask()">
-      <h2>Create written task</h2>
-      @if (lessons.length === 0) {
-        <p class="helper-text">Create a lesson first.</p>
-      }
-      <label>
-        Lesson
-        <select name="taskLesson" [(ngModel)]="taskForm.lesson" [disabled]="lessons.length === 0" required>
-          <option [ngValue]="0">Choose lesson</option>
-          @for (lesson of lessons; track lesson.id) {
-            <option [ngValue]="lesson.id">{{ lesson.course_title }} / {{ lesson.module_title }} / {{ lesson.title }} (id {{ lesson.id }})</option>
-          }
-        </select>
-      </label>
-      <label>Title <input name="taskTitle" [(ngModel)]="taskForm.title" required></label>
-      <label>Instructions <textarea name="taskInstructions" [(ngModel)]="taskForm.instructions" rows="4"></textarea></label>
-      <button type="submit" [disabled]="lessons.length === 0 || taskForm.lesson === 0">Create task</button>
-    </form>
-
-    <aside class="teacher-card reference-card">
-      <h2>My content</h2>
-      <p>Only these teacher-owned items are available in the creation forms.</p>
-      <div class="reference-list">
-        <strong>My courses</strong>
-        @if (courses.length > 0) {
-          @for (course of courses; track course.id) {
-            <span>{{ course.id }} - {{ course.title }}</span>
-          }
-        } @else {
-          <span>No courses owned by this teacher yet.</span>
-        }
+  <section class="teacher-section">
+    <div class="section-heading">
+      <div>
+        <h2>Content creation</h2>
+        <p>Build course structure first, then add quizzes, choices, and written tasks to lessons.</p>
       </div>
-      <div class="reference-list">
-        <strong>My modules</strong>
-        @if (modules.length > 0) {
-          @for (module of modules; track module.id) {
-            <span>{{ module.id }} - {{ module.course_title || 'Course' }} / {{ module.title }}</span>
-          }
-        } @else {
-          <span>No modules owned by this teacher yet.</span>
-        }
-      </div>
-      <div class="reference-list">
-        <strong>My lessons</strong>
-        @if (lessons.length > 0) {
-          @for (lesson of lessons; track lesson.id) {
-            <span>{{ lesson.id }} - {{ lesson.course_title }} / {{ lesson.module_title }} / {{ lesson.title }}</span>
-          }
-        } @else {
-          <span>No lessons owned by this teacher yet.</span>
-        }
-      </div>
-      <div class="reference-list">
-        <strong>My quizzes</strong>
-        @if (quizzes.length > 0) {
-          @for (quiz of quizzes; track quiz.id) {
-            <span>{{ quiz.id }} - {{ quiz.course_title }} / {{ quiz.lesson_title }} / {{ quiz.title }}</span>
-          }
-        } @else {
-          <span>No quizzes owned by this teacher yet.</span>
-        }
-      </div>
-      <div class="reference-list">
-        <strong>My questions</strong>
-        @if (questions.length > 0) {
-          @for (question of questions; track question.id) {
-            <span>{{ question.id }} - {{ question.quiz_title }} / {{ question.text }}</span>
-          }
-        } @else {
-          <span>No questions owned by this teacher yet.</span>
-        }
-      </div>
-    </aside>
-  </div>
+    </div>
 
-  <section class="submissions-grid">
-    <div class="teacher-card">
-      <h2>Enrollment requests</h2>
-      @if (enrollmentRequests.length > 0) {
-        <div class="submission-list">
-          @for (request of enrollmentRequests; track request.id) {
-            <article>
-              <strong>{{ request.student_username }} - {{ request.course.title }}</strong>
-              <span>Status: {{ request.status }}</span>
-              <small>Updated: {{ request.updated_at | date: 'medium' }}</small>
-              @if (request.status === 'pending') {
-                <div class="inline-actions">
-                  <button type="button" [disabled]="updatingRequestId === request.id" (click)="updateEnrollmentRequest(request.id, 'approve')">
-                    {{ updatingRequestId === request.id ? 'Saving...' : 'Approve' }}
-                  </button>
-                  <button type="button" class="danger-button" [disabled]="updatingRequestId === request.id" (click)="updateEnrollmentRequest(request.id, 'reject')">
-                    Reject
-                  </button>
-                </div>
+    <div class="creation-layout">
+      <aside class="teacher-card guide-card">
+        <h3>Creation order</h3>
+        <ol>
+          <li>Create a course.</li>
+          <li>Add modules to that course.</li>
+          <li>Add lessons to modules.</li>
+          <li>Add one quiz and one written task to a lesson.</li>
+          <li>Add questions and choices to the quiz.</li>
+        </ol>
+        <p>All dropdowns use only content owned by the logged-in teacher.</p>
+      </aside>
+
+      <div class="creation-groups">
+        <section class="teacher-card creation-group">
+          <div class="group-heading">
+            <h3>Build course structure</h3>
+            <p>Course → Module → Lesson</p>
+          </div>
+
+          <div class="form-grid structure-grid">
+            <form class="teacher-form" (ngSubmit)="createCourse()">
+              <h4>Create course</h4>
+              <label>Title <input name="courseTitle" [(ngModel)]="courseForm.title" required></label>
+              <label>Description <textarea name="courseDescription" [(ngModel)]="courseForm.description" rows="3"></textarea></label>
+              <div class="two-column-fields">
+                <label>Level <input name="courseLevel" [(ngModel)]="courseForm.level"></label>
+                <label>Category <input name="courseCategory" [(ngModel)]="courseForm.category_name"></label>
+              </div>
+              <label>Image URL <input name="courseImage" [(ngModel)]="courseForm.image_url"></label>
+              <label class="checkbox-row"><input type="checkbox" name="coursePublished" [(ngModel)]="courseForm.is_published"> Published</label>
+              <button type="submit">Create course</button>
+            </form>
+
+            <form class="teacher-form" (ngSubmit)="createModule()">
+              <h4>Create module</h4>
+              @if (courses.length === 0) {
+                <p class="helper-text">Create a course first.</p>
               }
-            </article>
-          }
-        </div>
-      } @else {
-        <p>No enrollment requests yet.</p>
-      }
+              <label>
+                Course
+                <select name="moduleCourse" [(ngModel)]="moduleForm.course" [disabled]="courses.length === 0" required>
+                  <option [ngValue]="0">Choose course</option>
+                  @for (course of courses; track course.id) {
+                    <option [ngValue]="course.id">{{ course.title }} (id {{ course.id }})</option>
+                  }
+                </select>
+              </label>
+              <div class="two-column-fields">
+                <label>Title <input name="moduleTitle" [(ngModel)]="moduleForm.title" required></label>
+                <label>Order <input type="number" name="moduleOrder" [(ngModel)]="moduleForm.order"></label>
+              </div>
+              <button type="submit" [disabled]="courses.length === 0 || moduleForm.course === 0">Create module</button>
+            </form>
+
+            <form class="teacher-form" (ngSubmit)="createLesson()">
+              <h4>Create lesson</h4>
+              @if (modules.length === 0) {
+                <p class="helper-text">Create a module first.</p>
+              }
+              <label>
+                Module
+                <select name="lessonModule" [(ngModel)]="lessonForm.module" [disabled]="modules.length === 0" required>
+                  <option [ngValue]="0">Choose module</option>
+                  @for (module of modules; track module.id) {
+                    <option [ngValue]="module.id">{{ module.course_title || 'Course' }} / {{ module.title }} (id {{ module.id }})</option>
+                  }
+                </select>
+              </label>
+              <label>Title <input name="lessonTitle" [(ngModel)]="lessonForm.title" required></label>
+              <label>YouTube URL <input name="lessonYoutube" [(ngModel)]="lessonForm.youtube_url"></label>
+              <label>Content <textarea name="lessonContent" [(ngModel)]="lessonForm.content" rows="3"></textarea></label>
+              <label>Order <input type="number" name="lessonOrder" [(ngModel)]="lessonForm.order"></label>
+              <button type="submit" [disabled]="modules.length === 0 || lessonForm.module === 0">Create lesson</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="teacher-card creation-group">
+          <div class="group-heading">
+            <h3>Add lesson activities</h3>
+            <p>Quiz → Question → Choice, plus written task</p>
+          </div>
+
+          <div class="form-grid activity-form-grid">
+            <form class="teacher-form compact-form" (ngSubmit)="createQuiz()">
+              <h4>Create quiz</h4>
+              @if (lessons.length === 0) {
+                <p class="helper-text">Create a lesson first.</p>
+              }
+              <label>
+                Lesson
+                <select name="quizLesson" [(ngModel)]="quizForm.lesson" [disabled]="lessons.length === 0" required>
+                  <option [ngValue]="0">Choose lesson</option>
+                  @for (lesson of lessons; track lesson.id) {
+                    <option [ngValue]="lesson.id">{{ lesson.course_title }} / {{ lesson.module_title }} / {{ lesson.title }} (id {{ lesson.id }})</option>
+                  }
+                </select>
+              </label>
+              <label>Title <input name="quizTitle" [(ngModel)]="quizForm.title" required></label>
+              <button type="submit" [disabled]="lessons.length === 0 || quizForm.lesson === 0">Create quiz</button>
+            </form>
+
+            <form class="teacher-form compact-form" (ngSubmit)="createQuestion()">
+              <h4>Create question</h4>
+              @if (quizzes.length === 0) {
+                <p class="helper-text">Create a quiz first.</p>
+              }
+              <label>
+                Quiz
+                <select name="questionQuiz" [(ngModel)]="questionForm.quiz" [disabled]="quizzes.length === 0" required>
+                  <option [ngValue]="0">Choose quiz</option>
+                  @for (quiz of quizzes; track quiz.id) {
+                    <option [ngValue]="quiz.id">{{ quiz.course_title }} / {{ quiz.lesson_title }} / {{ quiz.title }} (id {{ quiz.id }})</option>
+                  }
+                </select>
+              </label>
+              <label>Question text <textarea name="questionText" [(ngModel)]="questionForm.text" rows="3" required></textarea></label>
+              <label>Order <input type="number" name="questionOrder" [(ngModel)]="questionForm.order"></label>
+              <button type="submit" [disabled]="quizzes.length === 0 || questionForm.quiz === 0">Create question</button>
+            </form>
+
+            <form class="teacher-form compact-form" (ngSubmit)="createChoice()">
+              <h4>Create choice</h4>
+              @if (questions.length === 0) {
+                <p class="helper-text">Create a question first.</p>
+              }
+              <label>
+                Question
+                <select name="choiceQuestion" [(ngModel)]="choiceForm.question" [disabled]="questions.length === 0" required>
+                  <option [ngValue]="0">Choose question</option>
+                  @for (question of questions; track question.id) {
+                    <option [ngValue]="question.id">{{ question.course_title }} / {{ question.quiz_title }} / {{ question.text }} (id {{ question.id }})</option>
+                  }
+                </select>
+              </label>
+              <label>Choice text <input name="choiceText" [(ngModel)]="choiceForm.text" required></label>
+              <div class="two-column-fields">
+                <label>Order <input type="number" name="choiceOrder" [(ngModel)]="choiceForm.order"></label>
+                <label class="checkbox-row"><input type="checkbox" name="choiceCorrect" [(ngModel)]="choiceForm.is_correct"> Correct</label>
+              </div>
+              <button type="submit" [disabled]="questions.length === 0 || choiceForm.question === 0">Create choice</button>
+            </form>
+
+            <form class="teacher-form compact-form" (ngSubmit)="createTask()">
+              <h4>Create written task</h4>
+              @if (lessons.length === 0) {
+                <p class="helper-text">Create a lesson first.</p>
+              }
+              <label>
+                Lesson
+                <select name="taskLesson" [(ngModel)]="taskForm.lesson" [disabled]="lessons.length === 0" required>
+                  <option [ngValue]="0">Choose lesson</option>
+                  @for (lesson of lessons; track lesson.id) {
+                    <option [ngValue]="lesson.id">{{ lesson.course_title }} / {{ lesson.module_title }} / {{ lesson.title }} (id {{ lesson.id }})</option>
+                  }
+                </select>
+              </label>
+              <label>Title <input name="taskTitle" [(ngModel)]="taskForm.title" required></label>
+              <label>Instructions <textarea name="taskInstructions" [(ngModel)]="taskForm.instructions" rows="3"></textarea></label>
+              <button type="submit" [disabled]="lessons.length === 0 || taskForm.lesson === 0">Create task</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section class="teacher-section">
+    <div class="section-heading">
+      <div>
+        <h2>My content management</h2>
+        <p>Edit or delete content owned by the logged-in teacher. Delete actions ask for confirmation first.</p>
+      </div>
     </div>
 
-    <div class="teacher-card">
-      <h2>Student progress in my courses</h2>
-      @if (studentProgress.length > 0) {
-        <div class="submission-list">
-          @for (item of studentProgress; track item.enrollment_id) {
-            <article>
-              <strong>{{ item.student_username }} - {{ item.course_title }}</strong>
-              <span>{{ item.completed_lessons }} of {{ item.total_lessons }} lessons completed</span>
-              <span>Progress: {{ item.percentage }}%</span>
-            </article>
+    <div class="reference-grid management-grid">
+      <article class="reference-panel management-panel">
+        <div class="reference-heading">
+          <strong>My courses</strong>
+          <span>{{ courses.length }}</span>
+        </div>
+        <div class="management-list">
+          @if (courses.length > 0) {
+            @for (course of courses; track course.id) {
+              <article class="manage-item">
+                <div class="manage-summary">
+                  <strong>{{ course.title }}</strong>
+                  <span>{{ course.level || 'No level' }} / {{ course.category?.name || 'No category' }}</span>
+                </div>
+                @if (isEditing('course', course.id)) {
+                  <div class="manage-form">
+                    <label>Title <input name="editCourseTitle{{ course.id }}" [(ngModel)]="editForms.course.title"></label>
+                    <label>Description <textarea name="editCourseDescription{{ course.id }}" rows="3" [(ngModel)]="editForms.course.description"></textarea></label>
+                    <div class="two-column-fields">
+                      <label>Level <input name="editCourseLevel{{ course.id }}" [(ngModel)]="editForms.course.level"></label>
+                      <label>Category <input name="editCourseCategory{{ course.id }}" [(ngModel)]="editForms.course.category_name"></label>
+                    </div>
+                    <label>Image URL <input name="editCourseImage{{ course.id }}" [(ngModel)]="editForms.course.image_url"></label>
+                    <label class="checkbox-row"><input type="checkbox" name="editCoursePublished{{ course.id }}" [(ngModel)]="editForms.course.is_published"> Published</label>
+                    <div class="inline-actions">
+                      <button type="button" [disabled]="savingContentKey === 'course-' + course.id" (click)="saveContent('course', course.id)">
+                        {{ savingContentKey === 'course-' + course.id ? 'Saving...' : 'Save' }}
+                      </button>
+                      <button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button>
+                    </div>
+                  </div>
+                } @else if (isDeleting('course', course.id)) {
+                  <div class="confirm-delete">
+                    <span>Delete this course and its modules, lessons, quizzes, tasks, and related activity?</span>
+                    <div class="inline-actions">
+                      <button type="button" class="danger-button" [disabled]="deletingContentKey === 'course-' + course.id" (click)="confirmDelete('course', course.id)">
+                        {{ deletingContentKey === 'course-' + course.id ? 'Deleting...' : 'Confirm delete' }}
+                      </button>
+                      <button type="button" class="secondary-button" (click)="cancelDelete()">Cancel</button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="inline-actions">
+                    <button type="button" class="secondary-button" (click)="startEdit('course', course)">Edit</button>
+                    <button type="button" class="danger-button" (click)="askDelete('course', course.id)">Delete</button>
+                  </div>
+                }
+              </article>
+            }
+          } @else {
+            <p>No courses owned by this teacher yet.</p>
           }
         </div>
-      } @else {
-        <p>No approved student enrollments yet.</p>
-      }
+      </article>
+
+      <article class="reference-panel management-panel">
+        <div class="reference-heading">
+          <strong>My modules</strong>
+          <span>{{ modules.length }}</span>
+        </div>
+        <div class="management-list">
+          @if (modules.length > 0) {
+            @for (module of modules; track module.id) {
+              <article class="manage-item">
+                <div class="manage-summary">
+                  <strong>{{ module.title }}</strong>
+                  <span>{{ module.course_title || 'Course' }} / order {{ module.order }}</span>
+                </div>
+                @if (isEditing('module', module.id)) {
+                  <div class="manage-form two-column-fields">
+                    <label>Title <input name="editModuleTitle{{ module.id }}" [(ngModel)]="editForms.module.title"></label>
+                    <label>Order <input type="number" name="editModuleOrder{{ module.id }}" [(ngModel)]="editForms.module.order"></label>
+                    <div class="inline-actions">
+                      <button type="button" [disabled]="savingContentKey === 'module-' + module.id" (click)="saveContent('module', module.id)">Save</button>
+                      <button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button>
+                    </div>
+                  </div>
+                } @else if (isDeleting('module', module.id)) {
+                  <div class="confirm-delete"><span>Delete this module and its lessons?</span><div class="inline-actions"><button type="button" class="danger-button" (click)="confirmDelete('module', module.id)">Confirm delete</button><button type="button" class="secondary-button" (click)="cancelDelete()">Cancel</button></div></div>
+                } @else {
+                  <div class="inline-actions"><button type="button" class="secondary-button" (click)="startEdit('module', module)">Edit</button><button type="button" class="danger-button" (click)="askDelete('module', module.id)">Delete</button></div>
+                }
+              </article>
+            }
+          } @else { <p>No modules owned by this teacher yet.</p> }
+        </div>
+      </article>
+
+      <article class="reference-panel management-panel">
+        <div class="reference-heading"><strong>My lessons</strong><span>{{ lessons.length }}</span></div>
+        <div class="management-list">
+          @if (lessons.length > 0) {
+            @for (lesson of lessons; track lesson.id) {
+              <article class="manage-item">
+                <div class="manage-summary"><strong>{{ lesson.title }}</strong><span>{{ lesson.course_title }} / {{ lesson.module_title }}</span></div>
+                @if (isEditing('lesson', lesson.id)) {
+                  <div class="manage-form">
+                    <label>Title <input name="editLessonTitle{{ lesson.id }}" [(ngModel)]="editForms.lesson.title"></label>
+                    <label>YouTube URL <input name="editLessonYoutube{{ lesson.id }}" [(ngModel)]="editForms.lesson.youtube_url"></label>
+                    <label>Content <textarea name="editLessonContent{{ lesson.id }}" rows="3" [(ngModel)]="editForms.lesson.content"></textarea></label>
+                    <label>Order <input type="number" name="editLessonOrder{{ lesson.id }}" [(ngModel)]="editForms.lesson.order"></label>
+                    <div class="inline-actions"><button type="button" [disabled]="savingContentKey === 'lesson-' + lesson.id" (click)="saveContent('lesson', lesson.id)">Save</button><button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button></div>
+                  </div>
+                } @else if (isDeleting('lesson', lesson.id)) {
+                  <div class="confirm-delete"><span>Delete this lesson and its quiz/task activity?</span><div class="inline-actions"><button type="button" class="danger-button" (click)="confirmDelete('lesson', lesson.id)">Confirm delete</button><button type="button" class="secondary-button" (click)="cancelDelete()">Cancel</button></div></div>
+                } @else {
+                  <div class="inline-actions"><button type="button" class="secondary-button" (click)="startEdit('lesson', lesson)">Edit</button><button type="button" class="danger-button" (click)="askDelete('lesson', lesson.id)">Delete</button></div>
+                }
+              </article>
+            }
+          } @else { <p>No lessons owned by this teacher yet.</p> }
+        </div>
+      </article>
+
+      <article class="reference-panel management-panel">
+        <div class="reference-heading"><strong>My quizzes</strong><span>{{ quizzes.length }}</span></div>
+        <div class="management-list">
+          @if (quizzes.length > 0) {
+            @for (quiz of quizzes; track quiz.id) {
+              <article class="manage-item">
+                <div class="manage-summary"><strong>{{ quiz.title }}</strong><span>{{ quiz.course_title }} / {{ quiz.lesson_title }}</span></div>
+                @if (isEditing('quiz', quiz.id)) {
+                  <div class="manage-form"><label>Title <input name="editQuizTitle{{ quiz.id }}" [(ngModel)]="editForms.quiz.title"></label><div class="inline-actions"><button type="button" [disabled]="savingContentKey === 'quiz-' + quiz.id" (click)="saveContent('quiz', quiz.id)">Save</button><button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button></div></div>
+                } @else if (isDeleting('quiz', quiz.id)) {
+                  <div class="confirm-delete"><span>Delete this quiz and its questions/choices?</span><div class="inline-actions"><button type="button" class="danger-button" (click)="confirmDelete('quiz', quiz.id)">Confirm delete</button><button type="button" class="secondary-button" (click)="cancelDelete()">Cancel</button></div></div>
+                } @else {
+                  <div class="inline-actions"><button type="button" class="secondary-button" (click)="startEdit('quiz', quiz)">Edit</button><button type="button" class="danger-button" (click)="askDelete('quiz', quiz.id)">Delete</button></div>
+                }
+              </article>
+            }
+          } @else { <p>No quizzes owned by this teacher yet.</p> }
+        </div>
+      </article>
+
+      <article class="reference-panel management-panel">
+        <div class="reference-heading"><strong>My questions</strong><span>{{ questions.length }}</span></div>
+        <div class="management-list">
+          @if (questions.length > 0) {
+            @for (question of questions; track question.id) {
+              <article class="manage-item">
+                <div class="manage-summary"><strong>{{ question.text }}</strong><span>{{ question.quiz_title }} / order {{ question.order }}</span></div>
+                @if (isEditing('question', question.id)) {
+                  <div class="manage-form"><label>Text <textarea name="editQuestionText{{ question.id }}" rows="3" [(ngModel)]="editForms.question.text"></textarea></label><label>Order <input type="number" name="editQuestionOrder{{ question.id }}" [(ngModel)]="editForms.question.order"></label><div class="inline-actions"><button type="button" [disabled]="savingContentKey === 'question-' + question.id" (click)="saveContent('question', question.id)">Save</button><button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button></div></div>
+                } @else if (isDeleting('question', question.id)) {
+                  <div class="confirm-delete"><span>Delete this question and its choices?</span><div class="inline-actions"><button type="button" class="danger-button" (click)="confirmDelete('question', question.id)">Confirm delete</button><button type="button" class="secondary-button" (click)="cancelDelete()">Cancel</button></div></div>
+                } @else {
+                  <div class="inline-actions"><button type="button" class="secondary-button" (click)="startEdit('question', question)">Edit</button><button type="button" class="danger-button" (click)="askDelete('question', question.id)">Delete</button></div>
+                }
+              </article>
+            }
+          } @else { <p>No questions owned by this teacher yet.</p> }
+        </div>
+      </article>
+
+      <article class="reference-panel management-panel">
+        <div class="reference-heading"><strong>My choices</strong><span>{{ choices.length }}</span></div>
+        <div class="management-list">
+          @if (choices.length > 0) {
+            @for (choice of choices; track choice.id) {
+              <article class="manage-item">
+                <div class="manage-summary"><strong>{{ choice.text }}</strong><span>{{ choice.quiz_title }} / {{ choice.is_correct ? 'correct' : 'incorrect' }}</span></div>
+                @if (isEditing('choice', choice.id)) {
+                  <div class="manage-form"><label>Text <input name="editChoiceText{{ choice.id }}" [(ngModel)]="editForms.choice.text"></label><div class="two-column-fields"><label>Order <input type="number" name="editChoiceOrder{{ choice.id }}" [(ngModel)]="editForms.choice.order"></label><label class="checkbox-row"><input type="checkbox" name="editChoiceCorrect{{ choice.id }}" [(ngModel)]="editForms.choice.is_correct"> Correct</label></div><div class="inline-actions"><button type="button" [disabled]="savingContentKey === 'choice-' + choice.id" (click)="saveContent('choice', choice.id)">Save</button><button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button></div></div>
+                } @else if (isDeleting('choice', choice.id)) {
+                  <div class="confirm-delete"><span>Delete this answer choice?</span><div class="inline-actions"><button type="button" class="danger-button" (click)="confirmDelete('choice', choice.id)">Confirm delete</button><button type="button" class="secondary-button" (click)="cancelDelete()">Cancel</button></div></div>
+                } @else {
+                  <div class="inline-actions"><button type="button" class="secondary-button" (click)="startEdit('choice', choice)">Edit</button><button type="button" class="danger-button" (click)="askDelete('choice', choice.id)">Delete</button></div>
+                }
+              </article>
+            }
+          } @else { <p>No choices owned by this teacher yet.</p> }
+        </div>
+      </article>
+
+      <article class="reference-panel management-panel">
+        <div class="reference-heading"><strong>My written tasks</strong><span>{{ tasks.length }}</span></div>
+        <div class="management-list">
+          @if (tasks.length > 0) {
+            @for (task of tasks; track task.id) {
+              <article class="manage-item">
+                <div class="manage-summary"><strong>{{ task.title }}</strong><span>{{ task.course_title }} / {{ task.lesson_title }}</span></div>
+                @if (isEditing('task', task.id)) {
+                  <div class="manage-form"><label>Title <input name="editTaskTitle{{ task.id }}" [(ngModel)]="editForms.task.title"></label><label>Instructions <textarea name="editTaskInstructions{{ task.id }}" rows="3" [(ngModel)]="editForms.task.instructions"></textarea></label><div class="inline-actions"><button type="button" [disabled]="savingContentKey === 'task-' + task.id" (click)="saveContent('task', task.id)">Save</button><button type="button" class="secondary-button" (click)="cancelEdit()">Cancel</button></div></div>
+                } @else if (isDeleting('task', task.id)) {
+                  <div class="confirm-delete"><span>Delete this written task and its student submissions?</span><div class="inline-actions"><button type="button" class="danger-button" (click)="confirmDelete('task', task.id)">Confirm delete</button><button type="button" class="secondary-button" (click)="cancelDelete()">Cancel</button></div></div>
+                } @else {
+                  <div class="inline-actions"><button type="button" class="secondary-button" (click)="startEdit('task', task)">Edit</button><button type="button" class="danger-button" (click)="askDelete('task', task.id)">Delete</button></div>
+                }
+              </article>
+            }
+          } @else { <p>No written tasks owned by this teacher yet.</p> }
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="teacher-section">
+    <div class="section-heading">
+      <div>
+        <h2>Student activity / review</h2>
+        <p>Approve students, monitor progress, and review submitted work from your courses.</p>
+      </div>
     </div>
 
-    <div class="teacher-card">
-      <h2>Quiz submissions from my courses</h2>
-      @if (quizSubmissions.length > 0) {
-        <div class="submission-list">
-          @for (submission of quizSubmissions; track submission.id) {
-            <article>
-              <strong>{{ submission.student_username }} - {{ submission.quiz_title }}</strong>
-              <span>{{ submission.course_title }} / {{ submission.lesson_title }}</span>
-              <span>Score: {{ submission.score }} / {{ submission.total_questions }}</span>
-              <small>{{ submission.submitted_at | date: 'medium' }}</small>
-            </article>
-          }
-        </div>
-      } @else {
-        <p>No quiz submissions yet.</p>
-      }
-    </div>
+    <div class="activity-grid">
+      <div class="teacher-card activity-card">
+        <h3>Enrollment requests</h3>
+        @if (enrollmentRequests.length > 0) {
+          <div class="submission-list">
+            @for (request of enrollmentRequests; track request.id) {
+              <article>
+                <div class="submission-main">
+                  <strong>{{ request.student_username }}</strong>
+                  <span>{{ request.course.title }}</span>
+                </div>
+                <span class="status-pill">{{ request.status }}</span>
+                <small>Updated: {{ request.updated_at | date: 'medium' }}</small>
+                @if (request.status === 'pending') {
+                  <div class="inline-actions">
+                    <button type="button" [disabled]="updatingRequestId === request.id" (click)="updateEnrollmentRequest(request.id, 'approve')">
+                      {{ updatingRequestId === request.id ? 'Saving...' : 'Approve' }}
+                    </button>
+                    <button type="button" class="danger-button" [disabled]="updatingRequestId === request.id" (click)="updateEnrollmentRequest(request.id, 'reject')">
+                      Reject
+                    </button>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <p>No enrollment requests yet.</p>
+        }
+      </div>
 
-    <div class="teacher-card">
-      <h2>Written task submissions from my courses</h2>
-      @if (taskSubmissions.length > 0) {
-        <div class="submission-list">
-          @for (submission of taskSubmissions; track submission.id) {
-            <article>
-              <strong>{{ submission.student_username }} - {{ submission.task_title }}</strong>
-              <span>{{ submission.course_title }} / {{ submission.lesson_title }}</span>
-              <p>{{ submission.answer_text }}</p>
-              <small>Status: {{ submission.status }} / Updated: {{ submission.updated_at | date: 'medium' }}</small>
-            </article>
-          }
-        </div>
-      } @else {
-        <p>No written task submissions yet.</p>
-      }
+      <div class="teacher-card activity-card">
+        <h3>Student progress</h3>
+        @if (studentProgress.length > 0) {
+          <div class="submission-list">
+            @for (item of studentProgress; track item.enrollment_id) {
+              <article>
+                <div class="submission-main">
+                  <strong>{{ item.student_username }}</strong>
+                  <span>{{ item.course_title }}</span>
+                </div>
+                <span>{{ item.completed_lessons }} of {{ item.total_lessons }} lessons completed</span>
+                <span class="status-pill">{{ item.percentage }}%</span>
+              </article>
+            }
+          </div>
+        } @else {
+          <p>No approved student enrollments yet.</p>
+        }
+      </div>
+
+      <div class="teacher-card activity-card">
+        <h3>Quiz submissions</h3>
+        @if (quizSubmissions.length > 0) {
+          <div class="submission-list">
+            @for (submission of quizSubmissions; track submission.id) {
+              <article>
+                <div class="submission-main">
+                  <strong>{{ submission.student_username }}</strong>
+                  <span>{{ submission.quiz_title }}</span>
+                </div>
+                <span>{{ submission.course_title }} / {{ submission.lesson_title }}</span>
+                <span class="status-pill">Score: {{ submission.score }} / {{ submission.total_questions }}</span>
+                <small>{{ submission.submitted_at | date: 'medium' }}</small>
+              </article>
+            }
+          </div>
+        } @else {
+          <p>No quiz submissions yet.</p>
+        }
+      </div>
+
+      <div class="teacher-card activity-card wide-card">
+        <h3>Written task submissions</h3>
+        @if (taskSubmissions.length > 0) {
+          <div class="submission-list">
+            @for (submission of taskSubmissions; track submission.id) {
+              <article>
+                <div class="submission-main">
+                  <strong>{{ submission.student_username }}</strong>
+                  <span>{{ submission.task_title }} / {{ submission.course_title }} / {{ submission.lesson_title }}</span>
+                </div>
+                <p>{{ submission.answer_text }}</p>
+                <div class="submission-meta-row">
+                  <span class="status-pill">{{ submission.status }}</span>
+                  @if (submission.score !== null) {
+                    <span class="status-pill">Score: {{ submission.score }} / 100</span>
+                  }
+                  <small>Updated: {{ submission.updated_at | date: 'medium' }}</small>
+                </div>
+                @if (submission.teacher_feedback) {
+                  <p><strong>Teacher feedback:</strong> {{ submission.teacher_feedback }}</p>
+                }
+                @if (submission.reviewed_at) {
+                  <small>Reviewed: {{ submission.reviewed_at | date: 'medium' }}</small>
+                }
+
+                @if (reviewingSubmissionId === submission.id) {
+                  <form class="review-form" (ngSubmit)="saveTaskReview(submission.id)">
+                    <label>
+                      Score (0-100)
+                      <input type="number" name="reviewScore{{ submission.id }}" min="0" max="100" [(ngModel)]="reviewForm.score" required>
+                    </label>
+                    <label>
+                      Feedback
+                      <textarea name="reviewFeedback{{ submission.id }}" rows="3" [(ngModel)]="reviewForm.teacher_feedback"></textarea>
+                    </label>
+                    <div class="inline-actions">
+                      <button type="submit" [disabled]="savingReviewId === submission.id">
+                        {{ savingReviewId === submission.id ? 'Saving...' : 'Save review' }}
+                      </button>
+                      <button type="button" class="secondary-button" [disabled]="savingReviewId === submission.id" (click)="cancelReview()">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                } @else {
+                  <button type="button" (click)="openReviewForm(submission)">
+                    {{ submission.status === 'reviewed' ? 'Edit review' : 'Review' }}
+                  </button>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <p>No written task submissions yet.</p>
+        }
+      </div>
     </div>
   </section>
 </section>
