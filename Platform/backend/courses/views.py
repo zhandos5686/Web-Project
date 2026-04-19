@@ -1,5 +1,7 @@
 from rest_framework import generics, viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 
 from .models import Category, Course, Lesson, Module
 from users.permissions import IsTeacher
@@ -9,8 +11,11 @@ from .serializers import (
     LessonSerializer,
     ModuleSerializer,
     TeacherCourseCreateSerializer,
+    TeacherCourseUpdateSerializer,
     TeacherLessonCreateSerializer,
+    TeacherLessonUpdateSerializer,
     TeacherModuleCreateSerializer,
+    TeacherModuleUpdateSerializer,
 )
 
 
@@ -52,6 +57,59 @@ class TeacherModuleCreateView(generics.CreateAPIView):
 class TeacherLessonCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = TeacherLessonCreateSerializer
+
+
+class TeacherOwnedContentMixin:
+    permission_classes = [IsAuthenticated, IsTeacher]
+    ownership_error_message = "You can manage only your own content."
+    delete_success_message = "Content deleted successfully."
+
+    def check_owner(self, obj):
+        raise NotImplementedError
+
+    def get_object(self):
+        obj = super().get_object()
+        if not self.check_owner(obj):
+            raise PermissionDenied(self.ownership_error_message)
+        return obj
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.delete()
+        return Response({"message": self.delete_success_message})
+
+
+class TeacherCourseDetailView(TeacherOwnedContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = Course.objects.select_related("category", "teacher").prefetch_related("modules__lessons")
+    serializer_class = TeacherCourseUpdateSerializer
+    ownership_error_message = "You can edit or delete only your own courses."
+    delete_success_message = "Course deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.teacher_id == self.request.user.id
+
+
+class TeacherModuleDetailView(TeacherOwnedContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = Module.objects.select_related("course", "course__teacher").prefetch_related("lessons")
+    serializer_class = TeacherModuleUpdateSerializer
+    ownership_error_message = "You can edit or delete only modules from your own courses."
+    delete_success_message = "Module deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.course.teacher_id == self.request.user.id
+
+
+class TeacherLessonDetailView(TeacherOwnedContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = Lesson.objects.select_related("module", "module__course", "module__course__teacher")
+    serializer_class = TeacherLessonUpdateSerializer
+    ownership_error_message = "You can edit or delete only lessons from your own courses."
+    delete_success_message = "Lesson deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.module.course.teacher_id == self.request.user.id
 
 
 class TeacherMyCoursesView(generics.ListAPIView):

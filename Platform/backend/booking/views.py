@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 
 from .models import Booking, LessonSlot
 from .serializers import BookingSerializer, LessonSlotSerializer
+from notifications.models import Notification
+from notifications.services import create_notification
 from users.models import UserProfile
 from users.permissions import IsTeacher
 
@@ -47,7 +49,11 @@ class TeacherMySlotsView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
     def get(self, request):
-        slots = LessonSlot.objects.filter(teacher=request.user).select_related("teacher").order_by("starts_at")
+        slots = (
+            LessonSlot.objects.filter(teacher=request.user)
+            .select_related("teacher", "booking", "booking__student")
+            .order_by("starts_at")
+        )
         return Response(LessonSlotSerializer(slots, many=True).data)
 
 
@@ -146,6 +152,18 @@ class BookSlotView(APIView):
                 },
                 status=status.HTTP_200_OK,
             )
+
+        create_notification(
+            recipient=slot.teacher,
+            title="Live lesson slot booked",
+            message=f"{request.user.username} booked your live lesson slot on {slot.starts_at:%Y-%m-%d %H:%M}.",
+            notification_type=Notification.Type.BOOKING_CREATED,
+            metadata={
+                "slot_id": slot.id,
+                "booking_id": booking.id,
+                "student_username": request.user.username,
+            },
+        )
 
         return Response(
             {

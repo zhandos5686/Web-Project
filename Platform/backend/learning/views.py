@@ -1,11 +1,15 @@
 from django.shortcuts import get_object_or_404
 from django.db.models import Case, IntegerField, Value, When
+from django.utils import timezone
 from rest_framework import generics, status, viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from courses.models import Course, Lesson
+from notifications.models import Notification
+from notifications.services import create_notification
 from users.models import UserProfile
 from users.permissions import IsTeacher
 from .models import (
@@ -24,16 +28,22 @@ from .serializers import (
     EnrollmentRequestSerializer,
     EnrollmentSerializer,
     ProgressRecordSerializer,
+    QuizChoiceSerializer,
     QuizQuestionSerializer,
     QuizSerializer,
     QuizSubmissionSerializer,
     TaskSerializer,
     TaskSubmissionSerializer,
     TeacherQuizChoiceCreateSerializer,
+    TeacherQuizChoiceUpdateSerializer,
     TeacherQuizCreateSerializer,
+    TeacherQuizUpdateSerializer,
     TeacherQuizQuestionCreateSerializer,
+    TeacherQuizQuestionUpdateSerializer,
     TeacherStudentProgressSerializer,
     TeacherTaskCreateSerializer,
+    TeacherTaskUpdateSerializer,
+    TeacherTaskSubmissionReviewSerializer,
 )
 
 
@@ -538,6 +548,22 @@ class SubmitTaskView(APIView):
                 "answer_text": answer_text,
                 "status": TaskSubmission.Status.SUBMITTED,
                 "score": None,
+                "teacher_feedback": "",
+                "reviewed_at": None,
+            },
+        )
+        create_notification(
+            recipient=lesson.module.course.teacher,
+            title="Written task submitted",
+            message=f"{request.user.username} submitted '{task.title}' in {lesson.title}.",
+            notification_type=Notification.Type.TASK_SUBMITTED,
+            metadata={
+                "task_id": task.id,
+                "submission_id": submission.id,
+                "lesson_id": lesson.id,
+                "course_id": lesson.module.course_id,
+                "student_username": request.user.username,
+                "action": "created" if created else "updated",
             },
         )
         return Response(
@@ -570,6 +596,76 @@ class TeacherTaskCreateView(generics.CreateAPIView):
     serializer_class = TeacherTaskCreateSerializer
 
 
+class TeacherOwnedLearningContentMixin:
+    permission_classes = [IsAuthenticated, IsTeacher]
+    ownership_error_message = "You can manage only your own content."
+    delete_success_message = "Content deleted successfully."
+
+    def check_owner(self, obj):
+        raise NotImplementedError
+
+    def get_object(self):
+        obj = super().get_object()
+        if not self.check_owner(obj):
+            raise PermissionDenied(self.ownership_error_message)
+        return obj
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.delete()
+        return Response({"message": self.delete_success_message})
+
+
+class TeacherQuizDetailView(TeacherOwnedLearningContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = Quiz.objects.select_related("lesson", "lesson__module", "lesson__module__course")
+    serializer_class = TeacherQuizUpdateSerializer
+    ownership_error_message = "You can edit or delete only quizzes from your own courses."
+    delete_success_message = "Quiz deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.lesson.module.course.teacher_id == self.request.user.id
+
+
+class TeacherQuizQuestionDetailView(TeacherOwnedLearningContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = QuizQuestion.objects.select_related("quiz", "quiz__lesson", "quiz__lesson__module", "quiz__lesson__module__course")
+    serializer_class = TeacherQuizQuestionUpdateSerializer
+    ownership_error_message = "You can edit or delete only questions from your own quizzes."
+    delete_success_message = "Question deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.quiz.lesson.module.course.teacher_id == self.request.user.id
+
+
+class TeacherQuizChoiceDetailView(TeacherOwnedLearningContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = QuizChoice.objects.select_related(
+        "question",
+        "question__quiz",
+        "question__quiz__lesson",
+        "question__quiz__lesson__module",
+        "question__quiz__lesson__module__course",
+    )
+    serializer_class = TeacherQuizChoiceUpdateSerializer
+    ownership_error_message = "You can edit or delete only choices from your own questions."
+    delete_success_message = "Choice deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.question.quiz.lesson.module.course.teacher_id == self.request.user.id
+
+
+class TeacherTaskDetailView(TeacherOwnedLearningContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = Task.objects.select_related("lesson", "lesson__module", "lesson__module__course")
+    serializer_class = TeacherTaskUpdateSerializer
+    ownership_error_message = "You can edit or delete only written tasks from your own courses."
+    delete_success_message = "Written task deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.lesson.module.course.teacher_id == self.request.user.id
+
+
 class TeacherMyQuizzesView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = QuizSerializer
@@ -596,6 +692,36 @@ class TeacherMyQuestionsView(generics.ListAPIView):
         )
 
 
+class TeacherMyChoicesView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+    serializer_class = QuizChoiceSerializer
+
+    def get_queryset(self):
+        return (
+            QuizChoice.objects.filter(question__quiz__lesson__module__course__teacher=self.request.user)
+            .select_related(
+                "question",
+                "question__quiz",
+                "question__quiz__lesson",
+                "question__quiz__lesson__module",
+                "question__quiz__lesson__module__course",
+            )
+            .order_by("question__quiz__lesson__module__course__title", "question__quiz__title", "question__order", "order", "id")
+        )
+
+
+class TeacherMyTasksView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        return (
+            Task.objects.filter(lesson__module__course__teacher=self.request.user)
+            .select_related("lesson", "lesson__module", "lesson__module__course")
+            .order_by("lesson__module__course__title", "lesson__module__order", "lesson__order", "id")
+        )
+
+
 class TeacherQuizSubmissionsView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
@@ -618,6 +744,54 @@ class TeacherTaskSubmissionsView(APIView):
             .order_by("-updated_at")
         )
         return Response(TaskSubmissionSerializer(submissions, many=True).data)
+
+
+class TeacherReviewTaskSubmissionView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def post(self, request, submission_id):
+        submission = get_object_or_404(
+            TaskSubmission.objects.select_related(
+                "student",
+                "task",
+                "task__lesson",
+                "task__lesson__module",
+                "task__lesson__module__course",
+            ),
+            id=submission_id,
+            task__lesson__module__course__teacher=request.user,
+        )
+
+        serializer = TeacherTaskSubmissionReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        submission.score = serializer.validated_data["score"]
+        submission.teacher_feedback = serializer.validated_data.get("teacher_feedback", "")
+        submission.status = TaskSubmission.Status.REVIEWED
+        submission.reviewed_at = timezone.now()
+        submission.save(update_fields=["score", "teacher_feedback", "status", "reviewed_at", "updated_at"])
+
+        create_notification(
+            recipient=submission.student,
+            title="Written task reviewed",
+            message=f"Your task '{submission.task.title}' was reviewed. Score: {submission.score}/100.",
+            notification_type=Notification.Type.TASK_REVIEWED,
+            metadata={
+                "task_id": submission.task_id,
+                "submission_id": submission.id,
+                "lesson_id": submission.task.lesson_id,
+                "course_id": submission.task.lesson.module.course_id,
+                "score": submission.score,
+            },
+        )
+
+        return Response(
+            {
+                "status": "reviewed",
+                "message": "Task submission reviewed successfully.",
+                "submission": TaskSubmissionSerializer(submission).data,
+            }
+        )
 
 
 class ProgressRecordViewSet(viewsets.ReadOnlyModelViewSet):

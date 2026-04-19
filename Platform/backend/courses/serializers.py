@@ -97,6 +97,41 @@ class TeacherCourseCreateSerializer(serializers.ModelSerializer):
         )
 
 
+class TeacherCourseUpdateSerializer(serializers.ModelSerializer):
+    category_id = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    category_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    class Meta:
+        model = Course
+        fields = [
+            "id",
+            "title",
+            "description",
+            "level",
+            "image_url",
+            "category_id",
+            "category_name",
+            "is_published",
+        ]
+
+    def validate_category_id(self, value):
+        if value is not None and not Category.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Category not found.")
+        return value
+
+    def update(self, instance, validated_data):
+        category_id = validated_data.pop("category_id", None)
+        category_name = validated_data.pop("category_name", None)
+
+        if category_id is not None:
+            instance.category = Category.objects.get(id=category_id) if category_id else None
+        elif category_name is not None:
+            category_name = category_name.strip()
+            instance.category = Category.objects.get_or_create(name=category_name)[0] if category_name else None
+
+        return super().update(instance, validated_data)
+
+
 class TeacherModuleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Module
@@ -109,6 +144,12 @@ class TeacherModuleCreateSerializer(serializers.ModelSerializer):
         return value
 
 
+class TeacherModuleUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Module
+        fields = ["id", "title", "order"]
+
+
 class TeacherLessonCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
@@ -119,3 +160,9 @@ class TeacherLessonCreateSerializer(serializers.ModelSerializer):
         if value.course.teacher_id != request.user.id:
             raise serializers.ValidationError("Ownership error: teachers can add lessons only to modules from their own courses.")
         return value
+
+
+class TeacherLessonUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ["id", "title", "youtube_url", "content", "order"]

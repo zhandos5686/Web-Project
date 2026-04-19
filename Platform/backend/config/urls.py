@@ -15,6 +15,7 @@ def api_root(request):
                 "courses": "/api/courses/",
                 "learning": "/api/learning/",
                 "booking": "/api/booking/",
+                "notifications": "/api/notifications/",
             },
         }
     )
@@ -27,4 +28,5 @@ urlpatterns = [
     path("api/courses/", include("courses.urls")),
     path("api/learning/", include("learning.urls")),
     path("api/booking/", include("booking.urls")),
+    path("api/notifications/", include("notifications.urls")),
 ]

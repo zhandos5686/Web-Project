@@ -43,9 +43,12 @@ class TeacherStudentProgressSerializer(serializers.Serializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    lesson_title = serializers.CharField(source="lesson.title", read_only=True)
+    course_title = serializers.CharField(source="lesson.module.course.title", read_only=True)
+
     class Meta:
         model = Task
-        fields = ["id", "lesson", "title", "instructions"]
+        fields = ["id", "lesson", "lesson_title", "course_title", "title", "instructions"]
 
 
 class TeacherTaskCreateSerializer(serializers.ModelSerializer):
@@ -60,6 +63,12 @@ class TeacherTaskCreateSerializer(serializers.ModelSerializer):
         if Task.objects.filter(lesson=value).exists():
             raise serializers.ValidationError("This lesson already has a written task.")
         return value
+
+
+class TeacherTaskUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ["id", "title", "instructions"]
 
 
 class TaskSubmissionSerializer(serializers.ModelSerializer):
@@ -84,16 +93,39 @@ class TaskSubmissionSerializer(serializers.ModelSerializer):
             "answer_text",
             "status",
             "score",
+            "teacher_feedback",
             "submitted_at",
             "updated_at",
+            "reviewed_at",
         ]
-        read_only_fields = ["id", "status", "score", "submitted_at", "updated_at"]
+        read_only_fields = ["id", "status", "score", "teacher_feedback", "submitted_at", "updated_at", "reviewed_at"]
+
+
+class TeacherTaskSubmissionReviewSerializer(serializers.Serializer):
+    score = serializers.IntegerField(min_value=0, max_value=100)
+    teacher_feedback = serializers.CharField(required=False, allow_blank=True)
 
 
 class QuizChoiceSerializer(serializers.ModelSerializer):
+    question = serializers.IntegerField(source="question.id", read_only=True)
+    question_text = serializers.CharField(source="question.text", read_only=True)
+    quiz_title = serializers.CharField(source="question.quiz.title", read_only=True)
+    lesson_title = serializers.CharField(source="question.quiz.lesson.title", read_only=True)
+    course_title = serializers.CharField(source="question.quiz.lesson.module.course.title", read_only=True)
+
     class Meta:
         model = QuizChoice
-        fields = ["id", "text", "order"]
+        fields = [
+            "id",
+            "question",
+            "question_text",
+            "quiz_title",
+            "lesson_title",
+            "course_title",
+            "text",
+            "is_correct",
+            "order",
+        ]
 
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
@@ -131,6 +163,12 @@ class TeacherQuizCreateSerializer(serializers.ModelSerializer):
         return value
 
 
+class TeacherQuizUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = ["id", "title"]
+
+
 class TeacherQuizQuestionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizQuestion
@@ -143,6 +181,12 @@ class TeacherQuizQuestionCreateSerializer(serializers.ModelSerializer):
         return value
 
 
+class TeacherQuizQuestionUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuizQuestion
+        fields = ["id", "text", "order"]
+
+
 class TeacherQuizChoiceCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizChoice
@@ -153,6 +197,12 @@ class TeacherQuizChoiceCreateSerializer(serializers.ModelSerializer):
         if value.quiz.lesson.module.course.teacher_id != request.user.id:
             raise serializers.ValidationError("Ownership error: teachers can add choices only to questions from their own quizzes.")
         return value
+
+
+class TeacherQuizChoiceUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuizChoice
+        fields = ["id", "text", "is_correct", "order"]
 
 
 class QuizSubmissionSerializer(serializers.ModelSerializer):

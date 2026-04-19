@@ -101,8 +101,10 @@ class TaskSubmission(models.Model):
     answer_text = models.TextField()
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.SUBMITTED)
     score = models.PositiveIntegerField(null=True, blank=True)
+    teacher_feedback = models.TextField(blank=True, default="")
     submitted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = ["student", "task"]
