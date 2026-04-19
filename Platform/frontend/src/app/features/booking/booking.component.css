@@ -102,6 +102,46 @@
   color: #5d667a;
 }
 
+.slot-group-label {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8a93a6;
+}
+
+.slot-available {
+  border-left: 3px solid #1f6b3a;
+}
+
+.slot-booked {
+  border-left: 3px solid #8a93a6;
+}
+
+.slot-booked-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  gap: 8px;
+  user-select: none;
+}
+
+.accordion-icon {
+  color: #8a93a6;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.booking-details {
+  display: grid;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid #d8deea;
+  margin-top: 2px;
+}
+
 .message {
   width: fit-content;
   padding: 10px 12px;

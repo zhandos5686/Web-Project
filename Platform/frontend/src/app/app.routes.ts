@@ -12,6 +12,7 @@ import { MyCoursesComponent } from './features/my-courses/my-courses.component';
 import { MyTasksComponent } from './features/my-tasks/my-tasks.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { ProgressComponent } from './features/progress/progress.component';
+import { NotificationsComponent } from './features/notifications/notifications.component';
 import { TeacherComponent } from './features/teacher/teacher.component';
 
 export const routes: Routes = [
@@ -26,5 +27,6 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
   { path: 'teacher', component: TeacherComponent, canActivate: [teacherGuard] },
   { path: 'booking', component: BookingComponent, canActivate: [authGuard] },
+  { path: 'notifications', component: NotificationsComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: 'catalog' },
 ];

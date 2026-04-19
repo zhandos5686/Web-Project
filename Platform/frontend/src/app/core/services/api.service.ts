@@ -14,6 +14,10 @@ export class ApiService {
     return this.http.post<T>(path, body);
   }
 
+  patch<T>(path: string, body: unknown): Observable<T> {
+    return this.http.patch<T>(path, body);
+  }
+
   delete<T>(path: string): Observable<T> {
     return this.http.delete<T>(path);
   }

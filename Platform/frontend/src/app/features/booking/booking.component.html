@@ -38,49 +38,57 @@
 
         <div class="booking-card">
           <h2>My slots</h2>
-            @if (teacherSlots.length > 0) {
-              <div class="item-list">
-                @for (slot of teacherSlots; track slot.id) {
-                  <article>
-                    <strong>{{ slot.starts_at | date: 'medium' }}</strong>
-                    <span>Ends: {{ slot.ends_at | date: 'shortTime' }}</span>
-                    @if (slot.meeting_url) {
-                      <a [href]="slot.meeting_url" target="_blank" rel="noreferrer">Meeting link</a>
-                    }
-                    <span>Status: {{ slot.is_available ? 'available' : 'booked' }}</span>
-                    @if (slot.is_available) {
-                      <button type="button" class="danger-button" [disabled]="deletingSlotId === slot.id" (click)="deleteSlot(slot.id)">
-                        {{ deletingSlotId === slot.id ? 'Deleting...' : 'Delete slot' }}
-                      </button>
-                    }
-                  </article>
-                }
-              </div>
-            } @else {
-              <p>No slots created yet.</p>
-            }
-        </div>
 
-        <div class="booking-card">
-          <h2>Bookings on my slots</h2>
-            @if (teacherBookings.length > 0) {
-              <div class="item-list">
-                @for (booking of teacherBookings; track booking.id) {
-                  <article>
-                    <strong>{{ booking.student_username }}</strong>
-                    <span>{{ booking.slot.starts_at | date: 'medium' }}</span>
-                    @if (booking.slot.meeting_url) {
-                      <a [href]="booking.slot.meeting_url" target="_blank" rel="noreferrer">Meeting link</a>
-                    }
-                    <span>Booked at: {{ booking.created_at | date: 'medium' }}</span>
-                  </article>
-                }
-              </div>
-            } @else {
-              <p>No bookings yet.</p>
-            }
+          @if (freeSlots.length > 0) {
+            <p class="slot-group-label">Available</p>
+            <div class="item-list">
+              @for (slot of freeSlots; track slot.id) {
+                <article class="slot-available">
+                  <strong>{{ slot.starts_at | date: 'medium' }}</strong>
+                  <span>Ends: {{ slot.ends_at | date: 'shortTime' }}</span>
+                  @if (slot.meeting_url) {
+                    <a [href]="slot.meeting_url" target="_blank" rel="noreferrer">Meeting link</a>
+                  }
+                  <button type="button" class="danger-button" [disabled]="deletingSlotId === slot.id" (click)="deleteSlot(slot.id)">
+                    {{ deletingSlotId === slot.id ? 'Deleting...' : 'Delete slot' }}
+                  </button>
+                </article>
+              }
+            </div>
+          }
+
+          @if (bookedSlots.length > 0) {
+            <p class="slot-group-label">Booked</p>
+            <div class="item-list">
+              @for (slot of bookedSlots; track slot.id) {
+                <article class="slot-booked">
+                  <div class="slot-booked-header" (click)="toggleSlot(slot.id)">
+                    <strong>{{ slot.starts_at | date: 'medium' }}</strong>
+                    <span class="accordion-icon">{{ expandedSlotId === slot.id ? '▲' : '▼' }}</span>
+                  </div>
+                  <span>Ends: {{ slot.ends_at | date: 'shortTime' }}</span>
+                  @if (expandedSlotId === slot.id) {
+                    <div class="booking-details">
+                      @if (slot.booking) {
+                        <span>Student: <strong>{{ slot.booking.student_username }}</strong></span>
+                        <span>Booked: {{ slot.booking.created_at | date: 'medium' }}</span>
+                      }
+                      @if (slot.meeting_url) {
+                        <a [href]="slot.meeting_url" target="_blank" rel="noreferrer">Meeting link</a>
+                      }
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          }
+
+          @if (teacherSlots.length === 0 && !isLoading) {
+            <p>No slots created yet.</p>
+          }
         </div>
       </section>
+
     } @else {
       <section class="booking-grid">
         <div class="booking-card">

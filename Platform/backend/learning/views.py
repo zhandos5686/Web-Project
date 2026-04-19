@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from courses.models import Course, Lesson
+from notifications.models import Notification
+from notifications.views import create_notification
 from users.models import UserProfile
 from users.permissions import IsTeacher
 from .models import (
@@ -515,7 +517,10 @@ class SubmitTaskView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, lesson_id):
-        lesson = get_object_or_404(Lesson.objects.select_related("module", "module__course"), id=lesson_id)
+        lesson = get_object_or_404(
+            Lesson.objects.select_related("module", "module__course", "module__course__teacher"),
+            id=lesson_id,
+        )
         permission_error = require_student_enrolled(request.user, lesson)
         if permission_error:
             return permission_error
@@ -538,8 +543,23 @@ class SubmitTaskView(APIView):
                 "answer_text": answer_text,
                 "status": TaskSubmission.Status.SUBMITTED,
                 "score": None,
+                "feedback": "",
             },
         )
+
+        teacher = lesson.module.course.teacher
+        if teacher:
+            create_notification(
+                recipient=teacher,
+                notif_type=Notification.Type.SUBMISSION_RECEIVED,
+                title="New Submission",
+                message=(
+                    f'{request.user.username} submitted an answer for task '
+                    f'"{task.title}" in lesson "{lesson.title}".'
+                ),
+                link="/teacher",
+            )
+
         return Response(
             {
                 "status": "submitted" if created else "updated",
@@ -618,6 +638,57 @@ class TeacherTaskSubmissionsView(APIView):
             .order_by("-updated_at")
         )
         return Response(TaskSubmissionSerializer(submissions, many=True).data)
+
+
+class GradeTaskSubmissionView(APIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+
+    def patch(self, request, submission_id):
+        submission = get_object_or_404(
+            TaskSubmission.objects.select_related(
+                "student",
+                "task",
+                "task__lesson",
+                "task__lesson__module",
+                "task__lesson__module__course",
+            ),
+            id=submission_id,
+            task__lesson__module__course__teacher=request.user,
+        )
+
+        score = request.data.get("score")
+        feedback = request.data.get("feedback", "").strip()
+
+        if score is None:
+            return Response(
+                {"status": "invalid", "message": "score is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        submission.score = score
+        submission.feedback = feedback
+        submission.status = TaskSubmission.Status.REVIEWED
+        submission.save(update_fields=["score", "feedback", "status", "updated_at"])
+
+        feedback_snippet = f" Feedback: {feedback[:120]}" if feedback else ""
+        create_notification(
+            recipient=submission.student,
+            notif_type=Notification.Type.TASK_GRADED,
+            title="Task Graded",
+            message=(
+                f'Your task "{submission.task.title}" has been graded. '
+                f"Score: {score}.{feedback_snippet}"
+            ),
+            link=f"/lessons/{submission.task.lesson.id}",
+        )
+
+        return Response(
+            {
+                "status": "graded",
+                "message": "Task submission graded successfully.",
+                "submission": TaskSubmissionSerializer(submission).data,
+            }
+        )
 
 
 class ProgressRecordViewSet(viewsets.ReadOnlyModelViewSet):

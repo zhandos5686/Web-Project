@@ -84,10 +84,11 @@ class TaskSubmissionSerializer(serializers.ModelSerializer):
             "answer_text",
             "status",
             "score",
+            "feedback",
             "submitted_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "status", "score", "submitted_at", "updated_at"]
+        read_only_fields = ["id", "status", "score", "feedback", "submitted_at", "updated_at"]
 
 
 class QuizChoiceSerializer(serializers.ModelSerializer):

@@ -1,7 +1,7 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, finalize, map, of, switchMap } from 'rxjs';
 
 import { AuthService } from '../../core/services/auth.service';
 import { CourseService } from '../../core/services/course.service';
@@ -52,7 +52,9 @@ export class CourseDetailComponent {
     this.isEnrolling = true;
     this.enrollMessage = '';
 
-    this.enrollmentService.enroll(courseId).subscribe({
+    this.enrollmentService.enroll(courseId).pipe(
+      finalize(() => { this.isEnrolling = false; }),
+    ).subscribe({
       next: (response) => {
         this.enrollMessage = response.message;
         this.enrollMessageType = response.status === 'request_created' ? 'success' : 'info';
@@ -67,10 +69,6 @@ export class CourseDetailComponent {
           ? 'Only student users can request enrollment in courses.'
           : 'Could not send enrollment request. Please try again.';
         this.enrollMessageType = 'error';
-        this.isEnrolling = false;
-      },
-      complete: () => {
-        this.isEnrolling = false;
       },
     });
   }

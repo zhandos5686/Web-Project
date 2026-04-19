@@ -1,0 +1,35 @@
+<div class="bell-wrapper">
+  <button type="button" class="bell-btn" (click)="toggle()" aria-label="Notifications">
+    <svg class="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+    @if ((unreadCount$ | async) ?? 0; as count) {
+      @if (count > 0) {
+        <span class="badge">{{ count > 99 ? '99+' : count }}</span>
+      }
+    }
+  </button>
+
+  @if (isOpen) {
+    <div class="dropdown">
+      <div class="dropdown-header">
+        <span class="dropdown-title">Notifications</span>
+        <button type="button" class="see-all-btn" (click)="goToAll()">See all</button>
+      </div>
+      @if (recent.length > 0) {
+        <ul class="notif-list">
+          @for (n of recent; track n.id) {
+            <li class="notif-item" [class.unread]="!n.is_read" (click)="open(n)">
+              <strong class="notif-title">{{ n.title }}</strong>
+              <p class="notif-message">{{ n.message }}</p>
+              <time class="notif-time">{{ n.created_at | date: 'MMM d, h:mm a' }}</time>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="notif-empty">No notifications yet.</p>
+      }
+    </div>
+  }
+</div>

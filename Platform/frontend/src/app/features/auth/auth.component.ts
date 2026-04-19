@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AuthService, UserRole } from '../../core/services/auth.service';
 
@@ -47,14 +48,12 @@ export class AuthComponent {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    this.authService.login(this.loginForm.getRawValue()).subscribe({
+    this.authService.login(this.loginForm.getRawValue()).pipe(
+      finalize(() => { this.isSubmitting = false; }),
+    ).subscribe({
       next: () => this.router.navigate(['/catalog']),
       error: () => {
         this.errorMessage = 'Login failed. Check username and password.';
-        this.isSubmitting = false;
-      },
-      complete: () => {
-        this.isSubmitting = false;
       },
     });
   }
@@ -68,14 +67,12 @@ export class AuthComponent {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    this.authService.register(this.registerForm.getRawValue()).subscribe({
+    this.authService.register(this.registerForm.getRawValue()).pipe(
+      finalize(() => { this.isSubmitting = false; }),
+    ).subscribe({
       next: () => this.router.navigate(['/catalog']),
       error: () => {
         this.errorMessage = 'Registration failed. Try another username or email.';
-        this.isSubmitting = false;
-      },
-      complete: () => {
-        this.isSubmitting = false;
       },
     });
   }

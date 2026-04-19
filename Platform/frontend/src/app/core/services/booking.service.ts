@@ -3,6 +3,11 @@ import { Observable } from 'rxjs';
 
 import { ApiService } from './api.service';
 
+export interface SlotBookingInfo {
+  student_username: string;
+  created_at: string;
+}
+
 export interface LessonSlot {
   id: number;
   teacher: number;
@@ -11,6 +16,7 @@ export interface LessonSlot {
   ends_at: string;
   meeting_url: string;
   is_available: boolean;
+  booking?: SlotBookingInfo;
 }
 
 export interface LiveBooking {

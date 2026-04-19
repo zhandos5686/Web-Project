@@ -16,6 +16,9 @@
       <a routerLink="/profile" routerLinkActive="active">Profile</a>
     }
   </div>
+  @if (currentUser$ | async) {
+    <app-notification-bell></app-notification-bell>
+  }
   @if (currentUser$ | async; as user) {
     <div class="user-box">
       <span class="user-name">{{ user.username }}</span>

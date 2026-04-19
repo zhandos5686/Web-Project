@@ -1,0 +1,35 @@
+<section class="page notifications-page">
+  <div class="page-heading">
+    <h1>Notifications</h1>
+    @if (notifications.length > 0) {
+      <button type="button" class="mark-all-btn" (click)="markAllRead()">Mark all as read</button>
+    }
+  </div>
+
+  @if (isLoading && notifications.length === 0) {
+    <p class="state-text">Loading...</p>
+  }
+
+  @if (!isLoading && notifications.length === 0) {
+    <p class="state-text">You have no notifications yet.</p>
+  }
+
+  <ul class="notif-list">
+    @for (n of notifications; track n.id) {
+      <li class="notif-item" [class.unread]="!n.is_read" (click)="markRead(n)">
+        <div class="notif-body">
+          <strong class="notif-title">{{ n.title }}</strong>
+          <p class="notif-message">{{ n.message }}</p>
+          <time class="notif-time">{{ n.created_at | date: 'MMM d, y, h:mm a' }}</time>
+        </div>
+        <button type="button" class="delete-btn" (click)="remove(n, $event)" aria-label="Delete notification">✕</button>
+      </li>
+    }
+  </ul>
+
+  @if (hasMore) {
+    <button type="button" class="load-more-btn" [disabled]="isLoading" (click)="loadMore()">
+      {{ isLoading ? 'Loading...' : 'Load more' }}
+    </button>
+  }
+</section>

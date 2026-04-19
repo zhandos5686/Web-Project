@@ -101,6 +101,7 @@ class TaskSubmission(models.Model):
     answer_text = models.TextField()
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.SUBMITTED)
     score = models.PositiveIntegerField(null=True, blank=True)
+    feedback = models.TextField(blank=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -33,10 +33,22 @@ export class BookingComponent implements OnInit, OnDestroy {
     meeting_url: '',
   };
 
+  expandedSlotId: number | null = null;
   teacherSlots: LessonSlot[] = [];
-  teacherBookings: LiveBooking[] = [];
   availableSlots: LessonSlot[] = [];
   myBookings: LiveBooking[] = [];
+
+  get freeSlots(): LessonSlot[] {
+    return this.teacherSlots.filter((s) => s.is_available);
+  }
+
+  get bookedSlots(): LessonSlot[] {
+    return this.teacherSlots.filter((s) => !s.is_available);
+  }
+
+  toggleSlot(id: number): void {
+    this.expandedSlotId = this.expandedSlotId === id ? null : id;
+  }
 
   ngOnInit(): void {
     this.userSubscription = this.authService.currentUser$.subscribe((user) => {
@@ -150,20 +162,18 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   private loadTeacherData(): void {
-    forkJoin({
-      slots: this.bookingService.getTeacherSlots().pipe(catchError(() => of([] as LessonSlot[]))),
-      bookings: this.bookingService.getTeacherBookings().pipe(catchError(() => of([] as LiveBooking[]))),
-    }).pipe(
+    this.bookingService.getTeacherSlots().pipe(
+      catchError(() => {
+        this.errorMessage = 'Could not load your lesson slots.';
+        return of([] as LessonSlot[]);
+      }),
       finalize(() => {
         this.finishLoading();
         this.cdr.detectChanges();
       }),
-    ).subscribe({
-      next: ({ slots, bookings }) => {
-        this.teacherSlots = slots;
-        this.teacherBookings = bookings;
-        this.cdr.detectChanges();
-      },
+    ).subscribe((slots) => {
+      this.teacherSlots = slots;
+      this.cdr.detectChanges();
     });
   }
 
