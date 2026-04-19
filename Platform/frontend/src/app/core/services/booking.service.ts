@@ -16,7 +16,7 @@ export interface LessonSlot {
   ends_at: string;
   meeting_url: string;
   is_available: boolean;
-  booking?: SlotBookingInfo;
+  booking?: SlotBookingInfo | null;
 }
 
 export interface LiveBooking {

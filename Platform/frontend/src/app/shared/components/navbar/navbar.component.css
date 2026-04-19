@@ -4,8 +4,8 @@
   gap: 24px;
   min-height: 64px;
   padding: 0 32px;
-  border-bottom: 1px solid #d8deea;
-  background: #ffffff;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .brand {
@@ -33,7 +33,7 @@
 .auth-link {
   padding: 0 10px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-control);
   background: transparent;
   color: #4e5870;
   font-size: 14px;
@@ -44,27 +44,174 @@
 .nav-links a.active,
 .auth-link.active {
   background: #e7eefc;
-  color: #183f8c;
+  color: var(--color-primary);
 }
 
 .user-box {
   flex: 0 0 auto;
-  gap: 8px;
+  gap: 10px;
   color: #4e5870;
   font-size: 14px;
 }
 
 .user-name {
-  color: #172033;
-  font-weight: 700;
+  color: var(--color-text);
+  font-weight: 800;
 }
 
 .user-role {
   padding: 4px 8px;
   border-radius: 999px;
-  background: #edf7f1;
-  color: #1f6b3a;
+  background: var(--color-soft-green);
+  color: var(--color-success);
   text-transform: capitalize;
+}
+
+.notification-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.notification-button {
+  position: relative;
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: #4e5870;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.notification-button:hover,
+.notification-button:focus-visible {
+  border-color: var(--color-line);
+  background: var(--color-soft);
+  color: var(--color-primary);
+}
+
+.notification-button:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px rgb(24 63 140 / 14%);
+}
+
+.notification-icon {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 2px solid #ffffff;
+  background: var(--color-danger);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 13px;
+  text-align: center;
+}
+
+.notification-dropdown {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 10px);
+  right: -6px;
+  display: grid;
+  width: min(360px, 90vw);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: 0 18px 36px rgb(23 32 51 / 16%);
+}
+
+.notification-dropdown-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-dropdown-heading a {
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.notification-preview-list {
+  display: grid;
+  gap: 8px;
+}
+
+.notification-preview {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #e0e5ee;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: #4e5870;
+  cursor: pointer;
+  text-align: left;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.notification-preview:hover {
+  border-color: #c9d1df;
+  background: #f9fbff;
+}
+
+.notification-preview.unread {
+  border-color: #b9c8ea;
+  background: #f6f9ff;
+}
+
+.notification-preview.unread::before {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  content: "";
+}
+
+.notification-preview strong {
+  color: var(--color-text);
+  padding-right: 16px;
+}
+
+.notification-preview span {
+  line-height: 1.4;
+}
+
+.notification-preview small,
+.notification-dropdown p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
 }
 
 @media (max-width: 760px) {
@@ -81,5 +228,10 @@
 
   .user-box {
     flex-wrap: wrap;
+  }
+
+  .notification-dropdown {
+    right: auto;
+    left: 0;
   }
 }

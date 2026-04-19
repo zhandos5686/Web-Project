@@ -25,6 +25,7 @@ export class CourseDetailComponent {
   enrollMessage = '';
   enrollMessageType: 'success' | 'info' | 'error' = 'info';
   isEnrolling = false;
+  readonly currentUser$ = this.authService.currentUser$;
 
   readonly course$ = this.route.paramMap.pipe(
     map((params) => params.get('id')),

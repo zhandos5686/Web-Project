@@ -30,6 +30,25 @@ interface AuthResponse {
   user: AuthUser;
 }
 
+export interface ForgotPasswordResponse {
+  message: string;
+  reset_url?: string;
+  resetUrl?: string;
+  reset_link?: string;
+  [key: string]: unknown;
+}
+
+export interface ResetPasswordPayload {
+  uid: string;
+  token: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
@@ -71,6 +90,19 @@ export class AuthService {
     );
   }
 
+  requestPasswordReset(email: string): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>('/users/auth/forgot-password/', { email }).pipe(
+      map((response) => ({
+        ...response,
+        reset_url: this.extractResetUrl(response),
+      })),
+    );
+  }
+
+  resetPassword(payload: ResetPasswordPayload): Observable<ResetPasswordResponse> {
+    return this.http.post<ResetPasswordResponse>('/users/auth/reset-password/', payload);
+  }
+
   loadCurrentUser(): Observable<AuthUser | null> {
     if (!this.hasToken()) {
       this.currentUserSubject.next(null);
@@ -107,5 +139,10 @@ export class AuthService {
   private clearAuth(): void {
     localStorage.removeItem(this.tokenKey);
     this.currentUserSubject.next(null);
+  }
+
+  private extractResetUrl(response: ForgotPasswordResponse): string | undefined {
+    const candidates = [response.reset_url, response.resetUrl, response.reset_link];
+    return candidates.find((value): value is string => typeof value === 'string' && value.length > 0);
   }
 }

@@ -22,8 +22,8 @@ export class NotificationBellComponent {
   toggle(): void {
     this.isOpen = !this.isOpen;
     if (this.isOpen) {
-      this.notificationService.getPage(1, 5).subscribe({
-        next: (page) => { this.recent = page.results; },
+      this.notificationService.getNotifications().subscribe({
+        next: (notifications) => { this.recent = notifications.slice(0, 5); },
         error: () => {},
       });
     }
@@ -35,9 +35,7 @@ export class NotificationBellComponent {
       notif.is_read = true;
     }
     this.isOpen = false;
-    if (notif.link) {
-      this.router.navigateByUrl(notif.link);
-    }
+    this.router.navigate(['/notifications']);
   }
 
   goToAll(): void {

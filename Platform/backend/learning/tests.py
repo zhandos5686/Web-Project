@@ -400,3 +400,95 @@ class EnrollmentApiTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_teacher_can_update_and_delete_own_quiz_question_choice_and_task(self):
+        self.course.teacher = self.teacher
+        self.course.save(update_fields=["teacher"])
+        quiz = Quiz.objects.create(lesson=self.lesson, title="Old Quiz")
+        question = QuizQuestion.objects.create(quiz=quiz, text="Old question?", order=1)
+        choice = QuizChoice.objects.create(question=question, text="Old choice", is_correct=False, order=1)
+        task = Task.objects.create(lesson=self.lesson, title="Old Task", instructions="Old instructions")
+
+        self.authenticate(self.teacher)
+
+        quiz_response = self.client.patch(
+            reverse("teacher-quiz-detail", args=[quiz.id]),
+            {"title": "Updated Quiz"},
+            format="json",
+        )
+        self.assertEqual(quiz_response.status_code, 200)
+        quiz.refresh_from_db()
+        self.assertEqual(quiz.title, "Updated Quiz")
+
+        question_response = self.client.patch(
+            reverse("teacher-question-detail", args=[question.id]),
+            {"text": "Updated question?", "order": 2},
+            format="json",
+        )
+        self.assertEqual(question_response.status_code, 200)
+        question.refresh_from_db()
+        self.assertEqual(question.text, "Updated question?")
+        self.assertEqual(question.order, 2)
+
+        choice_response = self.client.patch(
+            reverse("teacher-choice-detail", args=[choice.id]),
+            {"text": "Updated choice", "is_correct": True, "order": 3},
+            format="json",
+        )
+        self.assertEqual(choice_response.status_code, 200)
+        choice.refresh_from_db()
+        self.assertEqual(choice.text, "Updated choice")
+        self.assertTrue(choice.is_correct)
+
+        task_response = self.client.patch(
+            reverse("teacher-task-detail", args=[task.id]),
+            {"title": "Updated Task", "instructions": "Updated instructions"},
+            format="json",
+        )
+        self.assertEqual(task_response.status_code, 200)
+        task.refresh_from_db()
+        self.assertEqual(task.title, "Updated Task")
+
+        delete_choice_response = self.client.delete(reverse("teacher-choice-detail", args=[choice.id]))
+        self.assertEqual(delete_choice_response.status_code, 200)
+        self.assertFalse(QuizChoice.objects.filter(id=choice.id).exists())
+
+        delete_task_response = self.client.delete(reverse("teacher-task-detail", args=[task.id]))
+        self.assertEqual(delete_task_response.status_code, 200)
+        self.assertFalse(Task.objects.filter(id=task.id).exists())
+
+        delete_question_response = self.client.delete(reverse("teacher-question-detail", args=[question.id]))
+        self.assertEqual(delete_question_response.status_code, 200)
+        self.assertFalse(QuizQuestion.objects.filter(id=question.id).exists())
+
+        delete_quiz_response = self.client.delete(reverse("teacher-quiz-detail", args=[quiz.id]))
+        self.assertEqual(delete_quiz_response.status_code, 200)
+        self.assertFalse(Quiz.objects.filter(id=quiz.id).exists())
+
+    def test_student_and_other_teacher_cannot_manage_learning_content(self):
+        other_teacher = User.objects.create_user(username="learning_other_owner", password="StrongPass123")
+        UserProfile.objects.update_or_create(
+            user=other_teacher,
+            defaults={"role": UserProfile.Role.TEACHER},
+        )
+        self.course.teacher = other_teacher
+        self.course.save(update_fields=["teacher"])
+        quiz = Quiz.objects.create(lesson=self.lesson, title="Protected Quiz")
+
+        self.authenticate(self.student)
+        student_response = self.client.patch(
+            reverse("teacher-quiz-detail", args=[quiz.id]),
+            {"title": "Student Edit"},
+            format="json",
+        )
+        self.assertEqual(student_response.status_code, 403)
+
+        self.authenticate(self.teacher)
+        teacher_response = self.client.patch(
+            reverse("teacher-quiz-detail", args=[quiz.id]),
+            {"title": "Wrong Teacher Edit"},
+            format="json",
+        )
+        self.assertEqual(teacher_response.status_code, 403)
+        quiz.refresh_from_db()
+        self.assertEqual(quiz.title, "Protected Quiz")

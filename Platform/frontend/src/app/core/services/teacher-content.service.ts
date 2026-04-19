@@ -76,6 +76,29 @@ export interface CreateTaskPayload {
   instructions: string;
 }
 
+export type UpdateCoursePayload = Partial<CreateCoursePayload>;
+export type UpdateModulePayload = Partial<Omit<CreateModulePayload, 'course'>>;
+export type UpdateLessonPayload = Partial<Omit<CreateLessonPayload, 'module'>>;
+export type UpdateQuizPayload = Partial<Omit<CreateQuizPayload, 'lesson'>>;
+export type UpdateQuestionPayload = Partial<Omit<CreateQuestionPayload, 'quiz'>>;
+export type UpdateChoicePayload = Partial<Omit<CreateChoicePayload, 'question'>>;
+export type UpdateTaskPayload = Partial<Omit<CreateTaskPayload, 'lesson'>>;
+
+export interface DeleteResponse {
+  message: string;
+}
+
+export interface ReviewTaskSubmissionPayload {
+  score: number;
+  teacher_feedback: string;
+}
+
+export interface ReviewTaskSubmissionResponse {
+  status: 'reviewed';
+  message: string;
+  submission: MyTaskSubmission;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TeacherContentService {
   private readonly api = inject(ApiService);
@@ -98,6 +121,14 @@ export class TeacherContentService {
 
   getMyQuestions(): Observable<QuizQuestion[]> {
     return this.api.get<QuizQuestion[]>('/learning/teacher/my-questions/');
+  }
+
+  getMyChoices(): Observable<QuizChoice[]> {
+    return this.api.get<QuizChoice[]>('/learning/teacher/my-choices/');
+  }
+
+  getMyTasks(): Observable<LessonTask[]> {
+    return this.api.get<LessonTask[]>('/learning/teacher/my-tasks/');
   }
 
   createCourse(payload: CreateCoursePayload): Observable<Course> {
@@ -128,11 +159,77 @@ export class TeacherContentService {
     return this.api.post<LessonTask>('/learning/teacher/tasks/', payload);
   }
 
+  updateCourse(id: number, payload: UpdateCoursePayload): Observable<Course> {
+    return this.api.patch<Course>(`/courses/teacher/courses/${id}/`, payload);
+  }
+
+  deleteCourse(id: number): Observable<DeleteResponse> {
+    return this.api.delete<DeleteResponse>(`/courses/teacher/courses/${id}/`);
+  }
+
+  updateModule(id: number, payload: UpdateModulePayload): Observable<CourseModule> {
+    return this.api.patch<CourseModule>(`/courses/teacher/modules/${id}/`, payload);
+  }
+
+  deleteModule(id: number): Observable<DeleteResponse> {
+    return this.api.delete<DeleteResponse>(`/courses/teacher/modules/${id}/`);
+  }
+
+  updateLesson(id: number, payload: UpdateLessonPayload): Observable<Lesson> {
+    return this.api.patch<Lesson>(`/courses/teacher/lessons/${id}/`, payload);
+  }
+
+  deleteLesson(id: number): Observable<DeleteResponse> {
+    return this.api.delete<DeleteResponse>(`/courses/teacher/lessons/${id}/`);
+  }
+
+  updateQuiz(id: number, payload: UpdateQuizPayload): Observable<LessonQuiz> {
+    return this.api.patch<LessonQuiz>(`/learning/teacher/quizzes/${id}/`, payload);
+  }
+
+  deleteQuiz(id: number): Observable<DeleteResponse> {
+    return this.api.delete<DeleteResponse>(`/learning/teacher/quizzes/${id}/`);
+  }
+
+  updateQuestion(id: number, payload: UpdateQuestionPayload): Observable<QuizQuestion> {
+    return this.api.patch<QuizQuestion>(`/learning/teacher/questions/${id}/`, payload);
+  }
+
+  deleteQuestion(id: number): Observable<DeleteResponse> {
+    return this.api.delete<DeleteResponse>(`/learning/teacher/questions/${id}/`);
+  }
+
+  updateChoice(id: number, payload: UpdateChoicePayload): Observable<QuizChoice> {
+    return this.api.patch<QuizChoice>(`/learning/teacher/choices/${id}/`, payload);
+  }
+
+  deleteChoice(id: number): Observable<DeleteResponse> {
+    return this.api.delete<DeleteResponse>(`/learning/teacher/choices/${id}/`);
+  }
+
+  updateTask(id: number, payload: UpdateTaskPayload): Observable<LessonTask> {
+    return this.api.patch<LessonTask>(`/learning/teacher/tasks/${id}/`, payload);
+  }
+
+  deleteTask(id: number): Observable<DeleteResponse> {
+    return this.api.delete<DeleteResponse>(`/learning/teacher/tasks/${id}/`);
+  }
+
   getQuizSubmissions(): Observable<TeacherQuizSubmission[]> {
     return this.api.get<TeacherQuizSubmission[]>('/learning/teacher/quiz-submissions/');
   }
 
   getTaskSubmissions(): Observable<MyTaskSubmission[]> {
     return this.api.get<MyTaskSubmission[]>('/learning/teacher/task-submissions/');
+  }
+
+  reviewTaskSubmission(
+    submissionId: number,
+    payload: ReviewTaskSubmissionPayload,
+  ): Observable<ReviewTaskSubmissionResponse> {
+    return this.api.post<ReviewTaskSubmissionResponse>(
+      `/learning/teacher/task-submissions/${submissionId}/review/`,
+      payload,
+    );
   }
 }

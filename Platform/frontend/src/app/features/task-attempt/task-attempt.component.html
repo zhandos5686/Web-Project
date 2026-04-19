@@ -1,0 +1,98 @@
+<section class="page attempt-page">
+
+  @if (isLoading) {
+    <p class="state-text">Loading task...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="message error">{{ errorMessage }}</div>
+  }
+
+  @if (task) {
+    <div class="page-heading">
+      <div>
+        <h1>{{ task.title }}</h1>
+        <p class="meta">{{ task.course_title }} / <a [routerLink]="['/lessons', task.lesson_id]">{{ task.lesson_title }}</a></p>
+      </div>
+      @if (task.attempts.length > 0 && !task.can_retry) {
+        @if (task.attempts[0].passed) {
+          <span class="badge passed">Passed ✓</span>
+        } @else if (task.attempts[0].status === 'submitted') {
+          <span class="badge pending">Awaiting review</span>
+        }
+      }
+    </div>
+
+    @if (task.instructions) {
+      <div class="instructions-card">
+        <h2>Instructions</h2>
+        <p>{{ task.instructions }}</p>
+      </div>
+    }
+
+    <!-- Attempt history -->
+    @if (task.attempts.length > 0) {
+      <div class="history-card">
+        <h2>Attempt history</h2>
+        @for (attempt of task.attempts; track attempt.id; let i = $index) {
+          <article class="attempt-item" [class.passed]="attempt.passed === true" [class.failed]="attempt.passed === false" [class.pending]="attempt.status === 'submitted'">
+            <div class="attempt-header">
+              <strong>Attempt {{ task.attempts.length - i }}</strong>
+              <span class="attempt-status">{{ statusLabel(attempt) }}</span>
+              <small>{{ attempt.submitted_at | date: 'MMM d, y, h:mm a' }}</small>
+            </div>
+            <p class="attempt-answer">{{ attempt.answer_text }}</p>
+            @if (attempt.status === 'reviewed') {
+              <div class="attempt-review">
+                @if (attempt.score !== null) {
+                  <span>Score: <strong>{{ attempt.score }}/100</strong></span>
+                }
+                @if (attempt.teacher_feedback) {
+                  <span>Feedback: {{ attempt.teacher_feedback }}</span>
+                }
+                @if (attempt.reviewed_at) {
+                  <small>Reviewed {{ attempt.reviewed_at | date: 'MMM d, y' }}</small>
+                }
+              </div>
+            }
+          </article>
+        }
+      </div>
+    }
+
+    @if (submitMessage) {
+      <div class="message success">{{ submitMessage }}</div>
+    }
+
+    <!-- Try Again button -->
+    @if (task.can_retry && !showForm) {
+      <button type="button" class="primary-btn" (click)="tryAgain()">
+        {{ task.attempts.length === 0 ? 'Write answer' : 'Try again' }}
+      </button>
+    }
+
+    <!-- Submit form -->
+    @if (showForm) {
+      <form class="task-form" (ngSubmit)="submit()">
+        <h2>Your answer</h2>
+        <textarea
+          [(ngModel)]="answerText"
+          name="answerText"
+          rows="8"
+          placeholder="Write your answer here..."
+        ></textarea>
+
+        @if (submitError) {
+          <div class="message error">{{ submitError }}</div>
+        }
+
+        <div class="form-actions">
+          <button type="submit" class="primary-btn" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Submitting...' : 'Submit answer' }}
+          </button>
+          <button type="button" class="secondary-btn" (click)="showForm = false">Cancel</button>
+        </div>
+      </form>
+    }
+  }
+</section>

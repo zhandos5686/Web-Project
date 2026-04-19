@@ -1,35 +1,48 @@
 <section class="page notifications-page">
   <div class="page-heading">
     <h1>Notifications</h1>
-    @if (notifications.length > 0) {
-      <button type="button" class="mark-all-btn" (click)="markAllRead()">Mark all as read</button>
-    }
+    <p>Recent updates about bookings, submitted tasks, and reviewed written work.</p>
   </div>
 
-  @if (isLoading && notifications.length === 0) {
-    <p class="state-text">Loading...</p>
+  @if (message) {
+    <div class="message success">{{ message }}</div>
+  }
+  @if (errorMessage) {
+    <div class="message error">{{ errorMessage }}</div>
+  }
+  @if (isLoading) {
+    <div class="message">Loading notifications...</div>
   }
 
-  @if (!isLoading && notifications.length === 0) {
-    <p class="state-text">You have no notifications yet.</p>
-  }
+  <div class="notification-actions">
+    <button type="button" (click)="markAllRead()" [disabled]="notifications.length === 0">Mark all as read</button>
+    <button type="button" class="secondary-button" (click)="loadNotifications()">Refresh</button>
+  </div>
 
-  <ul class="notif-list">
-    @for (n of notifications; track n.id) {
-      <li class="notif-item" [class.unread]="!n.is_read" (click)="markRead(n)">
-        <div class="notif-body">
-          <strong class="notif-title">{{ n.title }}</strong>
-          <p class="notif-message">{{ n.message }}</p>
-          <time class="notif-time">{{ n.created_at | date: 'MMM d, y, h:mm a' }}</time>
-        </div>
-        <button type="button" class="delete-btn" (click)="remove(n, $event)" aria-label="Delete notification">✕</button>
-      </li>
-    }
-  </ul>
-
-  @if (hasMore) {
-    <button type="button" class="load-more-btn" [disabled]="isLoading" (click)="loadMore()">
-      {{ isLoading ? 'Loading...' : 'Load more' }}
-    </button>
+  @if (notifications.length > 0) {
+    <div class="notification-list">
+      @for (notification of notifications; track notification.id) {
+        <article class="notification-card" [class.unread]="!notification.is_read">
+          <div>
+            <strong>{{ notification.title }}</strong>
+            <p>{{ notification.message }}</p>
+            <small>{{ notification.created_at | date: 'medium' }}</small>
+          </div>
+          <div class="notification-card-actions">
+            @if (!notification.is_read) {
+              <button type="button" (click)="markRead(notification)">Mark read</button>
+            } @else {
+              <span class="read-label">Read</span>
+            }
+            <button type="button" class="danger-button" (click)="deleteNotification(notification.id)">Delete</button>
+          </div>
+        </article>
+      }
+    </div>
+  } @else if (!isLoading) {
+    <div class="empty-state">
+      <strong>No notifications yet</strong>
+      <span>New booking and written task updates will appear here.</span>
+    </div>
   }
 </section>

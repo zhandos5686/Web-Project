@@ -126,3 +126,70 @@ class TeacherCourseManagementApiTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_teacher_can_update_and_delete_own_course_module_and_lesson(self):
+        course = Course.objects.create(title="Old Course", teacher=self.teacher, is_published=True)
+        module = Module.objects.create(course=course, title="Old Module", order=1)
+        lesson = Lesson.objects.create(module=module, title="Old Lesson", content="Old content", order=1)
+
+        self.authenticate(self.teacher)
+
+        course_response = self.client.patch(
+            reverse("teacher-course-detail", args=[course.id]),
+            {"title": "Updated Course", "description": "Updated description", "category_name": "Updated Category"},
+            format="json",
+        )
+        self.assertEqual(course_response.status_code, 200)
+        course.refresh_from_db()
+        self.assertEqual(course.title, "Updated Course")
+        self.assertEqual(course.category.name, "Updated Category")
+
+        module_response = self.client.patch(
+            reverse("teacher-module-detail", args=[module.id]),
+            {"title": "Updated Module", "order": 2},
+            format="json",
+        )
+        self.assertEqual(module_response.status_code, 200)
+        module.refresh_from_db()
+        self.assertEqual(module.title, "Updated Module")
+        self.assertEqual(module.order, 2)
+
+        lesson_response = self.client.patch(
+            reverse("teacher-lesson-detail", args=[lesson.id]),
+            {"title": "Updated Lesson", "content": "Updated content", "order": 3},
+            format="json",
+        )
+        self.assertEqual(lesson_response.status_code, 200)
+        lesson.refresh_from_db()
+        self.assertEqual(lesson.title, "Updated Lesson")
+        self.assertEqual(lesson.content, "Updated content")
+
+        delete_response = self.client.delete(reverse("teacher-lesson-detail", args=[lesson.id]))
+        self.assertEqual(delete_response.status_code, 200)
+        self.assertFalse(Lesson.objects.filter(id=lesson.id).exists())
+
+    def test_student_and_other_teacher_cannot_manage_teacher_content(self):
+        other_teacher = User.objects.create_user(username="content_other_owner", password="StrongPass123")
+        UserProfile.objects.update_or_create(
+            user=other_teacher,
+            defaults={"role": UserProfile.Role.TEACHER},
+        )
+        course = Course.objects.create(title="Owned Course", teacher=other_teacher, is_published=True)
+
+        self.authenticate(self.student)
+        student_response = self.client.patch(
+            reverse("teacher-course-detail", args=[course.id]),
+            {"title": "Student Edit"},
+            format="json",
+        )
+        self.assertEqual(student_response.status_code, 403)
+
+        self.authenticate(self.teacher)
+        teacher_response = self.client.patch(
+            reverse("teacher-course-detail", args=[course.id]),
+            {"title": "Wrong Teacher Edit"},
+            format="json",
+        )
+        self.assertEqual(teacher_response.status_code, 403)
+        course.refresh_from_db()
+        self.assertEqual(course.title, "Owned Course")

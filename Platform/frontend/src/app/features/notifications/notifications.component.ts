@@ -1,7 +1,8 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { catchError, finalize, of } from 'rxjs';
 
-import { AppNotification, NotificationPage, NotificationService } from '../../core/services/notification.service';
+import { AppNotification, NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-notifications',
@@ -12,54 +13,79 @@ import { AppNotification, NotificationPage, NotificationService } from '../../co
 })
 export class NotificationsComponent implements OnInit {
   private readonly notificationService = inject(NotificationService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   notifications: AppNotification[] = [];
-  totalCount = 0;
-  currentPage = 1;
-  readonly pageSize = 20;
   isLoading = false;
-  hasMore = false;
+  message = '';
+  errorMessage = '';
 
   ngOnInit(): void {
-    this.loadPage(1);
+    this.loadNotifications();
   }
 
-  loadPage(page: number): void {
+  loadNotifications(): void {
     this.isLoading = true;
-    this.notificationService.getPage(page, this.pageSize).subscribe({
-      next: (data: NotificationPage) => {
-        this.notifications = page === 1 ? data.results : [...this.notifications, ...data.results];
-        this.totalCount = data.count;
-        this.currentPage = page;
-        this.hasMore = data.next !== null;
+    this.message = '';
+    this.errorMessage = '';
+    this.notificationService.getNotifications().pipe(
+      catchError(() => {
+        this.errorMessage = 'Could not load notifications.';
+        return of([] as AppNotification[]);
+      }),
+      finalize(() => {
         this.isLoading = false;
-      },
-      error: () => { this.isLoading = false; },
+        this.cdr.detectChanges();
+      }),
+    ).subscribe((notifications) => {
+      this.notifications = notifications;
+      this.cdr.detectChanges();
     });
   }
 
-  loadMore(): void {
-    this.loadPage(this.currentPage + 1);
-  }
+  markRead(notification: AppNotification): void {
+    if (notification.is_read) {
+      return;
+    }
 
-  markRead(notif: AppNotification): void {
-    if (notif.is_read) { return; }
-    this.notificationService.markRead(notif.id).subscribe(() => {
-      notif.is_read = true;
+    this.notificationService.markRead(notification.id).subscribe({
+      next: (response) => {
+        this.notifications = this.notifications.map((item) =>
+          item.id === response.notification.id ? response.notification : item,
+        );
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Could not mark notification as read.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
   markAllRead(): void {
-    this.notificationService.markAllRead().subscribe(() => {
-      this.notifications.forEach((n) => { n.is_read = true; });
+    this.notificationService.markAllRead().subscribe({
+      next: () => {
+        this.notifications = this.notifications.map((n) => ({ ...n, is_read: true }));
+        this.notificationService.unreadCount$.next(0);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Could not mark all notifications as read.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
-  remove(notif: AppNotification, event: Event): void {
-    event.stopPropagation();
-    this.notificationService.remove(notif.id).subscribe(() => {
-      this.notifications = this.notifications.filter((n) => n.id !== notif.id);
-      this.totalCount--;
+  deleteNotification(notificationId: number): void {
+    this.notificationService.deleteNotification(notificationId).subscribe({
+      next: () => {
+        this.notifications = this.notifications.filter((n) => n.id !== notificationId);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.errorMessage = 'Could not delete notification.';
+        this.cdr.detectChanges();
+      },
     });
   }
 }

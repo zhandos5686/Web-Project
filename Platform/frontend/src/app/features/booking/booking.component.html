@@ -17,7 +17,7 @@
 
   @if (currentUser; as user) {
     @if (user.role === 'teacher') {
-      <section class="booking-grid">
+      <section class="teacher-booking-layout">
         <form class="booking-card" (ngSubmit)="createSlot()">
           <h2>Create live lesson slot</h2>
           <p class="helper-text">Create one available time for a future online lesson. Add a meeting link so the student knows where the lesson will happen after booking.</p>
@@ -36,56 +36,73 @@
           <button type="submit" [disabled]="isCreatingSlot">{{ isCreatingSlot ? 'Creating...' : 'Create slot' }}</button>
         </form>
 
-        <div class="booking-card">
+        <div class="booking-card teacher-slots-panel">
           <h2>My slots</h2>
+          <p class="helper-text">Available slots can still be deleted. Booked slots are kept with student booking details.</p>
 
-          @if (freeSlots.length > 0) {
-            <p class="slot-group-label">Available</p>
-            <div class="item-list">
-              @for (slot of freeSlots; track slot.id) {
-                <article class="slot-available">
-                  <strong>{{ slot.starts_at | date: 'medium' }}</strong>
-                  <span>Ends: {{ slot.ends_at | date: 'shortTime' }}</span>
-                  @if (slot.meeting_url) {
-                    <a [href]="slot.meeting_url" target="_blank" rel="noreferrer">Meeting link</a>
-                  }
-                  <button type="button" class="danger-button" [disabled]="deletingSlotId === slot.id" (click)="deleteSlot(slot.id)">
-                    {{ deletingSlotId === slot.id ? 'Deleting...' : 'Delete slot' }}
-                  </button>
-                </article>
-              }
+          <section class="slot-group">
+            <div class="slot-group-heading">
+              <h3>Available</h3>
+              <span>{{ teacherAvailableSlots.length }}</span>
             </div>
-          }
-
-          @if (bookedSlots.length > 0) {
-            <p class="slot-group-label">Booked</p>
-            <div class="item-list">
-              @for (slot of bookedSlots; track slot.id) {
-                <article class="slot-booked">
-                  <div class="slot-booked-header" (click)="toggleSlot(slot.id)">
-                    <strong>{{ slot.starts_at | date: 'medium' }}</strong>
-                    <span class="accordion-icon">{{ expandedSlotId === slot.id ? '▲' : '▼' }}</span>
-                  </div>
-                  <span>Ends: {{ slot.ends_at | date: 'shortTime' }}</span>
-                  @if (expandedSlotId === slot.id) {
-                    <div class="booking-details">
-                      @if (slot.booking) {
-                        <span>Student: <strong>{{ slot.booking.student_username }}</strong></span>
-                        <span>Booked: {{ slot.booking.created_at | date: 'medium' }}</span>
-                      }
+            @if (teacherAvailableSlots.length > 0) {
+              <div class="slot-list">
+                @for (slot of teacherAvailableSlots; track slot.id) {
+                  <article class="slot-card">
+                    <div>
+                      <strong>{{ slot.starts_at | date: 'medium' }}</strong>
+                      <span>Ends: {{ slot.ends_at | date: 'shortTime' }}</span>
                       @if (slot.meeting_url) {
                         <a [href]="slot.meeting_url" target="_blank" rel="noreferrer">Meeting link</a>
                       }
                     </div>
-                  }
-                </article>
-              }
-            </div>
-          }
+                    <button type="button" class="danger-button" [disabled]="deletingSlotId === slot.id" (click)="deleteSlot(slot.id)">
+                      {{ deletingSlotId === slot.id ? 'Deleting...' : 'Delete slot' }}
+                    </button>
+                  </article>
+                }
+              </div>
+            } @else {
+              <p>No available slots right now.</p>
+            }
+          </section>
 
-          @if (teacherSlots.length === 0 && !isLoading) {
-            <p>No slots created yet.</p>
-          }
+          <section class="slot-group">
+            <div class="slot-group-heading">
+              <h3>Booked</h3>
+              <span>{{ teacherBookedSlots.length }}</span>
+            </div>
+            @if (teacherBookedSlots.length > 0) {
+              <div class="booked-list">
+                @for (slot of teacherBookedSlots; track slot.id) {
+                  <article class="booked-slot">
+                    <button type="button" class="booked-summary" (click)="toggleBookedSlot(slot.id)" [attr.aria-expanded]="expandedBookedSlotId === slot.id">
+                      <span>
+                        <strong>{{ slot.starts_at | date: 'medium' }}</strong>
+                        <small>{{ slot.booking?.student_username || 'Booked student' }}</small>
+                      </span>
+                      <span class="accordion-icon">{{ expandedBookedSlotId === slot.id ? 'Hide' : 'Details' }}</span>
+                    </button>
+                    @if (expandedBookedSlotId === slot.id) {
+                      <div class="booked-details">
+                        <span>Student: {{ slot.booking?.student_username || 'Unknown student' }}</span>
+                        <span>Start: {{ slot.starts_at | date: 'medium' }}</span>
+                        <span>End: {{ slot.ends_at | date: 'medium' }}</span>
+                        @if (slot.meeting_url) {
+                          <a [href]="slot.meeting_url" target="_blank" rel="noreferrer">Meeting link</a>
+                        }
+                        @if (slot.booking?.created_at) {
+                          <span>Booked at: {{ slot.booking?.created_at | date: 'medium' }}</span>
+                        }
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+            } @else {
+              <p>No booked slots yet.</p>
+            }
+          </section>
         </div>
       </section>
 

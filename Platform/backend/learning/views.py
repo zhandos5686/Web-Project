@@ -1,13 +1,15 @@
+from django.db.models import Case, F, IntegerField, Value, When
 from django.shortcuts import get_object_or_404
-from django.db.models import Case, IntegerField, Value, When
+from django.utils import timezone
 from rest_framework import generics, status, viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from courses.models import Course, Lesson
 from notifications.models import Notification
-from notifications.views import create_notification
+from notifications.services import create_notification
 from users.models import UserProfile
 from users.permissions import IsTeacher
 from .models import (
@@ -26,16 +28,26 @@ from .serializers import (
     EnrollmentRequestSerializer,
     EnrollmentSerializer,
     ProgressRecordSerializer,
+    QuizAttemptSerializer,
+    QuizChoiceSerializer,
     QuizQuestionSerializer,
     QuizSerializer,
     QuizSubmissionSerializer,
+    QuizWithAttemptsSerializer,
+    TaskAttemptSerializer,
     TaskSerializer,
     TaskSubmissionSerializer,
+    TaskWithAttemptsSerializer,
     TeacherQuizChoiceCreateSerializer,
+    TeacherQuizChoiceUpdateSerializer,
     TeacherQuizCreateSerializer,
+    TeacherQuizUpdateSerializer,
     TeacherQuizQuestionCreateSerializer,
+    TeacherQuizQuestionUpdateSerializer,
     TeacherStudentProgressSerializer,
     TeacherTaskCreateSerializer,
+    TeacherTaskUpdateSerializer,
+    TeacherTaskSubmissionReviewSerializer,
 )
 
 
@@ -536,29 +548,40 @@ class SubmitTaskView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        submission, created = TaskSubmission.objects.update_or_create(
+        # Always create a new attempt
+        latest = TaskSubmission.objects.filter(task=task, student=request.user).order_by("-submitted_at").first()
+        if latest and latest.status == TaskSubmission.Status.SUBMITTED:
+            return Response(
+                {"status": "pending_review", "message": "Your previous answer is awaiting teacher review."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if latest and latest.passed:
+            return Response(
+                {"status": "already_passed", "message": "You have already passed this task."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        submission = TaskSubmission.objects.create(
             student=request.user,
             task=task,
-            defaults={
-                "answer_text": answer_text,
-                "status": TaskSubmission.Status.SUBMITTED,
-                "score": None,
-                "feedback": "",
+            answer_text=answer_text,
+            status=TaskSubmission.Status.SUBMITTED,
+        )
+        created = True
+        create_notification(
+            recipient=lesson.module.course.teacher,
+            title="Written task submitted",
+            message=f"{request.user.username} submitted '{task.title}' in {lesson.title}.",
+            notification_type=Notification.Type.TASK_SUBMITTED,
+            metadata={
+                "task_id": task.id,
+                "submission_id": submission.id,
+                "lesson_id": lesson.id,
+                "course_id": lesson.module.course_id,
+                "student_username": request.user.username,
+                "action": "created" if created else "updated",
             },
         )
-
-        teacher = lesson.module.course.teacher
-        if teacher:
-            create_notification(
-                recipient=teacher,
-                notif_type=Notification.Type.SUBMISSION_RECEIVED,
-                title="New Submission",
-                message=(
-                    f'{request.user.username} submitted an answer for task '
-                    f'"{task.title}" in lesson "{lesson.title}".'
-                ),
-                link="/teacher",
-            )
 
         return Response(
             {
@@ -590,6 +613,76 @@ class TeacherTaskCreateView(generics.CreateAPIView):
     serializer_class = TeacherTaskCreateSerializer
 
 
+class TeacherOwnedLearningContentMixin:
+    permission_classes = [IsAuthenticated, IsTeacher]
+    ownership_error_message = "You can manage only your own content."
+    delete_success_message = "Content deleted successfully."
+
+    def check_owner(self, obj):
+        raise NotImplementedError
+
+    def get_object(self):
+        obj = super().get_object()
+        if not self.check_owner(obj):
+            raise PermissionDenied(self.ownership_error_message)
+        return obj
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        obj.delete()
+        return Response({"message": self.delete_success_message})
+
+
+class TeacherQuizDetailView(TeacherOwnedLearningContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = Quiz.objects.select_related("lesson", "lesson__module", "lesson__module__course")
+    serializer_class = TeacherQuizUpdateSerializer
+    ownership_error_message = "You can edit or delete only quizzes from your own courses."
+    delete_success_message = "Quiz deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.lesson.module.course.teacher_id == self.request.user.id
+
+
+class TeacherQuizQuestionDetailView(TeacherOwnedLearningContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = QuizQuestion.objects.select_related("quiz", "quiz__lesson", "quiz__lesson__module", "quiz__lesson__module__course")
+    serializer_class = TeacherQuizQuestionUpdateSerializer
+    ownership_error_message = "You can edit or delete only questions from your own quizzes."
+    delete_success_message = "Question deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.quiz.lesson.module.course.teacher_id == self.request.user.id
+
+
+class TeacherQuizChoiceDetailView(TeacherOwnedLearningContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = QuizChoice.objects.select_related(
+        "question",
+        "question__quiz",
+        "question__quiz__lesson",
+        "question__quiz__lesson__module",
+        "question__quiz__lesson__module__course",
+    )
+    serializer_class = TeacherQuizChoiceUpdateSerializer
+    ownership_error_message = "You can edit or delete only choices from your own questions."
+    delete_success_message = "Choice deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.question.quiz.lesson.module.course.teacher_id == self.request.user.id
+
+
+class TeacherTaskDetailView(TeacherOwnedLearningContentMixin, generics.RetrieveUpdateDestroyAPIView):
+    queryset = Task.objects.select_related("lesson", "lesson__module", "lesson__module__course")
+    serializer_class = TeacherTaskUpdateSerializer
+    ownership_error_message = "You can edit or delete only written tasks from your own courses."
+    delete_success_message = "Written task deleted successfully."
+    http_method_names = ["patch", "delete", "options"]
+
+    def check_owner(self, obj):
+        return obj.lesson.module.course.teacher_id == self.request.user.id
+
+
 class TeacherMyQuizzesView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsTeacher]
     serializer_class = QuizSerializer
@@ -613,6 +706,36 @@ class TeacherMyQuestionsView(generics.ListAPIView):
             .select_related("quiz", "quiz__lesson", "quiz__lesson__module", "quiz__lesson__module__course")
             .prefetch_related("choices")
             .order_by("quiz__lesson__module__course__title", "quiz__lesson__order", "quiz__title", "order", "id")
+        )
+
+
+class TeacherMyChoicesView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+    serializer_class = QuizChoiceSerializer
+
+    def get_queryset(self):
+        return (
+            QuizChoice.objects.filter(question__quiz__lesson__module__course__teacher=self.request.user)
+            .select_related(
+                "question",
+                "question__quiz",
+                "question__quiz__lesson",
+                "question__quiz__lesson__module",
+                "question__quiz__lesson__module__course",
+            )
+            .order_by("question__quiz__lesson__module__course__title", "question__quiz__title", "question__order", "order", "id")
+        )
+
+
+class TeacherMyTasksView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated, IsTeacher]
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        return (
+            Task.objects.filter(lesson__module__course__teacher=self.request.user)
+            .select_related("lesson", "lesson__module", "lesson__module__course")
+            .order_by("lesson__module__course__title", "lesson__module__order", "lesson__order", "id")
         )
 
 
@@ -640,10 +763,10 @@ class TeacherTaskSubmissionsView(APIView):
         return Response(TaskSubmissionSerializer(submissions, many=True).data)
 
 
-class GradeTaskSubmissionView(APIView):
+class TeacherReviewTaskSubmissionView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
 
-    def patch(self, request, submission_id):
+    def post(self, request, submission_id):
         submission = get_object_or_404(
             TaskSubmission.objects.select_related(
                 "student",
@@ -656,36 +779,34 @@ class GradeTaskSubmissionView(APIView):
             task__lesson__module__course__teacher=request.user,
         )
 
-        score = request.data.get("score")
-        feedback = request.data.get("feedback", "").strip()
+        serializer = TeacherTaskSubmissionReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if score is None:
-            return Response(
-                {"status": "invalid", "message": "score is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        submission.score = score
-        submission.feedback = feedback
+        submission.score = serializer.validated_data["score"]
+        submission.teacher_feedback = serializer.validated_data.get("teacher_feedback", "")
+        submission.passed = serializer.validated_data["passed"]
         submission.status = TaskSubmission.Status.REVIEWED
-        submission.save(update_fields=["score", "feedback", "status", "updated_at"])
+        submission.reviewed_at = timezone.now()
+        submission.save(update_fields=["score", "teacher_feedback", "passed", "status", "reviewed_at", "updated_at"])
 
-        feedback_snippet = f" Feedback: {feedback[:120]}" if feedback else ""
         create_notification(
             recipient=submission.student,
-            notif_type=Notification.Type.TASK_GRADED,
-            title="Task Graded",
-            message=(
-                f'Your task "{submission.task.title}" has been graded. '
-                f"Score: {score}.{feedback_snippet}"
-            ),
-            link=f"/lessons/{submission.task.lesson.id}",
+            title="Written task reviewed",
+            message=f"Your task '{submission.task.title}' was reviewed. Score: {submission.score}/100.",
+            notification_type=Notification.Type.TASK_REVIEWED,
+            metadata={
+                "task_id": submission.task_id,
+                "submission_id": submission.id,
+                "lesson_id": submission.task.lesson_id,
+                "course_id": submission.task.lesson.module.course_id,
+                "score": submission.score,
+            },
         )
 
         return Response(
             {
-                "status": "graded",
-                "message": "Task submission graded successfully.",
+                "status": "reviewed",
+                "message": "Task submission reviewed successfully.",
                 "submission": TaskSubmissionSerializer(submission).data,
             }
         )
@@ -697,3 +818,225 @@ class ProgressRecordViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return ProgressRecord.objects.filter(student=self.request.user).select_related("student", "lesson")
+
+
+# ── Student attempt views ──────────────────────────────────────────────────────
+
+class QuizDetailView(APIView):
+    """Quiz with questions + this student's attempt history."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, quiz_id):
+        quiz = get_object_or_404(
+            Quiz.objects.prefetch_related("questions__choices").select_related("lesson__module__course"),
+            id=quiz_id,
+        )
+        error = require_student_enrolled(request.user, quiz.lesson)
+        if error:
+            return error
+        return Response(QuizWithAttemptsSerializer(quiz, context={"request": request}).data)
+
+
+class SubmitQuizByIdView(APIView):
+    """Submit a new quiz attempt by quiz ID."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, quiz_id):
+        quiz = get_object_or_404(
+            Quiz.objects.prefetch_related("questions__choices").select_related("lesson__module__course"),
+            id=quiz_id,
+        )
+        error = require_student_enrolled(request.user, quiz.lesson)
+        if error:
+            return error
+
+        already_passed = QuizSubmission.objects.filter(
+            quiz=quiz, student=request.user, score=F("total_questions")
+        ).exclude(total_questions=0).exists()
+        if already_passed:
+            return Response(
+                {"status": "already_passed", "message": "You already achieved 100% on this quiz."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        answers = request.data.get("answers", [])
+        if not isinstance(answers, list):
+            return Response(
+                {"status": "invalid", "message": "Answers must be a list of {question_id, choice_id}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        answer_map = {}
+        for ans in answers:
+            qid = ans.get("question_id")
+            cid = ans.get("choice_id")
+            if qid is not None and cid is not None:
+                answer_map[int(qid)] = int(cid)
+
+        questions = list(quiz.questions.prefetch_related("choices"))
+        score = sum(
+            1 for q in questions
+            if QuizChoice.objects.filter(id=answer_map.get(q.id), question=q, is_correct=True).exists()
+        )
+        total = len(questions)
+
+        submission = QuizSubmission.objects.create(
+            student=request.user,
+            quiz=quiz,
+            selected_answers={str(k): v for k, v in answer_map.items()},
+            score=score,
+            total_questions=total,
+        )
+
+        percentage = round(score / total * 100) if total else 0
+        return Response(
+            {
+                "status": "submitted",
+                "message": "Quiz submitted.",
+                "score": score,
+                "total_questions": total,
+                "percentage": percentage,
+                "passed": percentage == 100,
+                "attempt": QuizAttemptSerializer(submission).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class TaskDetailView(APIView):
+    """Task with instructions + this student's attempt history."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, task_id):
+        task = get_object_or_404(
+            Task.objects.select_related("lesson__module__course"),
+            id=task_id,
+        )
+        error = require_student_enrolled(request.user, task.lesson)
+        if error:
+            return error
+        return Response(TaskWithAttemptsSerializer(task, context={"request": request}).data)
+
+
+class SubmitTaskByIdView(APIView):
+    """Submit a new task attempt by task ID."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, task_id):
+        task = get_object_or_404(
+            Task.objects.select_related("lesson__module__course__teacher"),
+            id=task_id,
+        )
+        error = require_student_enrolled(request.user, task.lesson)
+        if error:
+            return error
+
+        latest = TaskSubmission.objects.filter(task=task, student=request.user).order_by("-submitted_at").first()
+        if latest:
+            if latest.status == TaskSubmission.Status.SUBMITTED:
+                return Response(
+                    {"status": "pending_review", "message": "Your previous answer is still awaiting review."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if latest.passed:
+                return Response(
+                    {"status": "already_passed", "message": "You have already passed this task."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        answer_text = request.data.get("answer_text", "").strip()
+        if not answer_text:
+            return Response(
+                {"status": "invalid", "message": "Answer text is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        submission = TaskSubmission.objects.create(
+            student=request.user,
+            task=task,
+            answer_text=answer_text,
+            status=TaskSubmission.Status.SUBMITTED,
+        )
+
+        create_notification(
+            recipient=task.lesson.module.course.teacher,
+            title="Written task submitted",
+            message=f"{request.user.username} submitted '{task.title}'.",
+            notification_type=Notification.Type.TASK_SUBMITTED,
+            metadata={"task_id": task.id, "submission_id": submission.id},
+        )
+
+        return Response(
+            {
+                "status": "submitted",
+                "message": "Answer submitted. Awaiting teacher review.",
+                "attempt": TaskAttemptSerializer(submission).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class MyActivitiesView(APIView):
+    """All quizzes and tasks from enrolled courses with attempt summary."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        enrolled_ids = Enrollment.objects.filter(
+            student=request.user
+        ).values_list("course_id", flat=True)
+
+        quizzes = (
+            Quiz.objects.filter(lesson__module__course_id__in=enrolled_ids)
+            .select_related("lesson__module__course")
+            .order_by("lesson__module__course__title", "lesson__title")
+        )
+
+        tasks = (
+            Task.objects.filter(lesson__module__course_id__in=enrolled_ids)
+            .select_related("lesson__module__course")
+            .order_by("lesson__module__course__title", "lesson__title")
+        )
+
+        quiz_list = []
+        for quiz in quizzes:
+            attempts = QuizSubmission.objects.filter(quiz=quiz, student=request.user)
+            count = attempts.count()
+            best = attempts.order_by("-score").first()
+            best_pct = round(best.score / best.total_questions * 100) if best and best.total_questions else None
+            passed = best_pct == 100
+            quiz_list.append({
+                "id": quiz.id,
+                "title": quiz.title,
+                "lesson_id": quiz.lesson_id,
+                "lesson_title": quiz.lesson.title,
+                "course_title": quiz.lesson.module.course.title,
+                "attempt_count": count,
+                "best_percentage": best_pct,
+                "passed": passed,
+                "can_retry": not passed,
+            })
+
+        task_list = []
+        for task in tasks:
+            latest = TaskSubmission.objects.filter(task=task, student=request.user).order_by("-submitted_at").first()
+            count = TaskSubmission.objects.filter(task=task, student=request.user).count()
+            if latest is None:
+                can_retry = True
+            elif latest.status == TaskSubmission.Status.SUBMITTED:
+                can_retry = False
+            else:
+                can_retry = not latest.passed
+            task_list.append({
+                "id": task.id,
+                "title": task.title,
+                "lesson_id": task.lesson_id,
+                "lesson_title": task.lesson.title,
+                "course_title": task.lesson.module.course.title,
+                "attempt_count": count,
+                "latest_status": latest.status if latest else None,
+                "latest_score": latest.score if latest else None,
+                "latest_passed": latest.passed if latest else None,
+                "can_retry": can_retry,
+            })
+
+        return Response({"quizzes": quiz_list, "tasks": task_list})

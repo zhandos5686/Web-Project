@@ -27,6 +27,7 @@
         </label>
 
         <button type="submit" [disabled]="isSubmitting">Login</button>
+        <a class="forgot-link" routerLink="/forgot-password">Forgot password?</a>
       </form>
     } @else {
       <form [formGroup]="registerForm" (ngSubmit)="submitRegister()" class="auth-form">

@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
@@ -6,20 +6,33 @@ import { ApiService } from './api.service';
 
 export interface AppNotification {
   id: number;
-  type: string;
   title: string;
   message: string;
-  link: string;
+  type: string;
   is_read: boolean;
+  metadata: Record<string, unknown>;
   created_at: string;
-  extra_data: Record<string, unknown>;
 }
 
-export interface NotificationPage {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: AppNotification[];
+export interface UnreadCountResponse {
+  unread_count: number;
+}
+
+export interface MarkReadResponse {
+  status: string;
+  message: string;
+  notification: AppNotification;
+}
+
+export interface MarkAllReadResponse {
+  status: string;
+  message: string;
+  updated_count: number;
+}
+
+export interface DeleteNotificationResponse {
+  status: string;
+  message: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -29,18 +42,18 @@ export class NotificationService {
   readonly unreadCount$ = new BehaviorSubject<number>(0);
 
   refreshUnreadCount(): void {
-    this.api.get<{ count: number }>('/notifications/unread-count/').subscribe({
-      next: (res) => this.unreadCount$.next(res.count),
+    this.api.get<UnreadCountResponse>('/notifications/unread-count/').subscribe({
+      next: (res) => this.unreadCount$.next(res.unread_count),
       error: () => {},
     });
   }
 
-  getPage(page = 1, pageSize = 20): Observable<NotificationPage> {
-    return this.api.get<NotificationPage>(`/notifications/?page=${page}&page_size=${pageSize}`);
+  getNotifications(): Observable<AppNotification[]> {
+    return this.api.get<AppNotification[]>('/notifications/');
   }
 
-  markRead(id: number): Observable<AppNotification> {
-    return this.api.patch<AppNotification>(`/notifications/${id}/mark_read/`, {}).pipe(
+  markRead(notificationId: number): Observable<MarkReadResponse> {
+    return this.api.post<MarkReadResponse>(`/notifications/${notificationId}/mark-read/`, {}).pipe(
       tap(() => {
         const c = this.unreadCount$.value;
         if (c > 0) this.unreadCount$.next(c - 1);
@@ -48,13 +61,13 @@ export class NotificationService {
     );
   }
 
-  markAllRead(): Observable<{ marked_read: number }> {
-    return this.api.patch<{ marked_read: number }>('/notifications/mark_all_read/', {}).pipe(
+  markAllRead(): Observable<MarkAllReadResponse> {
+    return this.api.post<MarkAllReadResponse>('/notifications/mark-all-read/', {}).pipe(
       tap(() => this.unreadCount$.next(0)),
     );
   }
 
-  remove(id: number): Observable<void> {
-    return this.api.delete<void>(`/notifications/${id}/`);
+  deleteNotification(notificationId: number): Observable<DeleteNotificationResponse> {
+    return this.api.delete<DeleteNotificationResponse>(`/notifications/${notificationId}/`);
   }
 }

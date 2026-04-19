@@ -24,9 +24,16 @@
                 <span>{{ course.level || 'Any level' }}</span>
                 <span>{{ course.category?.name || 'General English' }}</span>
               </div>
-              <h2>{{ course.title }}</h2>
-              <p>{{ course.description }}</p>
-              <a [routerLink]="['/courses', course.id]">Open course</a>
+              <div class="course-copy">
+                <h2>{{ course.title }}</h2>
+                <p>{{ course.description }}</p>
+              </div>
+              <div class="course-card-footer">
+                @if (course.teacher_name) {
+                  <span>Teacher: {{ course.teacher_name }}</span>
+                }
+                <a [routerLink]="['/courses', course.id]">Open course</a>
+              </div>
             </div>
           </article>
         }

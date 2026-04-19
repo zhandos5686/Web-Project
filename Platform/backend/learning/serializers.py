@@ -1,3 +1,4 @@
+from django.db import models
 from rest_framework import serializers
 
 from courses.serializers import CourseSerializer
@@ -43,9 +44,12 @@ class TeacherStudentProgressSerializer(serializers.Serializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    lesson_title = serializers.CharField(source="lesson.title", read_only=True)
+    course_title = serializers.CharField(source="lesson.module.course.title", read_only=True)
+
     class Meta:
         model = Task
-        fields = ["id", "lesson", "title", "instructions"]
+        fields = ["id", "lesson", "lesson_title", "course_title", "title", "instructions"]
 
 
 class TeacherTaskCreateSerializer(serializers.ModelSerializer):
@@ -60,6 +64,12 @@ class TeacherTaskCreateSerializer(serializers.ModelSerializer):
         if Task.objects.filter(lesson=value).exists():
             raise serializers.ValidationError("This lesson already has a written task.")
         return value
+
+
+class TeacherTaskUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ["id", "title", "instructions"]
 
 
 class TaskSubmissionSerializer(serializers.ModelSerializer):
@@ -84,17 +94,41 @@ class TaskSubmissionSerializer(serializers.ModelSerializer):
             "answer_text",
             "status",
             "score",
-            "feedback",
+            "teacher_feedback",
+            "passed",
             "submitted_at",
             "updated_at",
+            "reviewed_at",
         ]
-        read_only_fields = ["id", "status", "score", "feedback", "submitted_at", "updated_at"]
+        read_only_fields = ["id", "status", "score", "teacher_feedback", "passed", "submitted_at", "updated_at", "reviewed_at"]
+
+
+class TeacherTaskSubmissionReviewSerializer(serializers.Serializer):
+    score = serializers.IntegerField(min_value=0, max_value=100)
+    teacher_feedback = serializers.CharField(required=False, allow_blank=True)
+    passed = serializers.BooleanField()
 
 
 class QuizChoiceSerializer(serializers.ModelSerializer):
+    question = serializers.IntegerField(source="question.id", read_only=True)
+    question_text = serializers.CharField(source="question.text", read_only=True)
+    quiz_title = serializers.CharField(source="question.quiz.title", read_only=True)
+    lesson_title = serializers.CharField(source="question.quiz.lesson.title", read_only=True)
+    course_title = serializers.CharField(source="question.quiz.lesson.module.course.title", read_only=True)
+
     class Meta:
         model = QuizChoice
-        fields = ["id", "text", "order"]
+        fields = [
+            "id",
+            "question",
+            "question_text",
+            "quiz_title",
+            "lesson_title",
+            "course_title",
+            "text",
+            "is_correct",
+            "order",
+        ]
 
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
@@ -132,6 +166,12 @@ class TeacherQuizCreateSerializer(serializers.ModelSerializer):
         return value
 
 
+class TeacherQuizUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = ["id", "title"]
+
+
 class TeacherQuizQuestionCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuizQuestion
@@ -142,6 +182,12 @@ class TeacherQuizQuestionCreateSerializer(serializers.ModelSerializer):
         if value.lesson.module.course.teacher_id != request.user.id:
             raise serializers.ValidationError("Ownership error: teachers can add questions only to quizzes from their own courses.")
         return value
+
+
+class TeacherQuizQuestionUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuizQuestion
+        fields = ["id", "text", "order"]
 
 
 class TeacherQuizChoiceCreateSerializer(serializers.ModelSerializer):
@@ -156,6 +202,12 @@ class TeacherQuizChoiceCreateSerializer(serializers.ModelSerializer):
         return value
 
 
+class TeacherQuizChoiceUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuizChoice
+        fields = ["id", "text", "is_correct", "order"]
+
+
 class QuizSubmissionSerializer(serializers.ModelSerializer):
     student_username = serializers.CharField(source="student.username", read_only=True)
     quiz_title = serializers.CharField(source="quiz.title", read_only=True)
@@ -163,6 +215,12 @@ class QuizSubmissionSerializer(serializers.ModelSerializer):
     lesson_title = serializers.CharField(source="quiz.lesson.title", read_only=True)
     course_id = serializers.IntegerField(source="quiz.lesson.module.course.id", read_only=True)
     course_title = serializers.CharField(source="quiz.lesson.module.course.title", read_only=True)
+    percentage = serializers.SerializerMethodField()
+
+    def get_percentage(self, obj):
+        if not obj.total_questions:
+            return 0
+        return round(obj.score / obj.total_questions * 100)
 
     class Meta:
         model = QuizSubmission
@@ -178,8 +236,90 @@ class QuizSubmissionSerializer(serializers.ModelSerializer):
             "selected_answers",
             "score",
             "total_questions",
+            "percentage",
             "submitted_at",
         ]
+
+
+class QuizAttemptSerializer(serializers.ModelSerializer):
+    """Compact attempt record shown in student history."""
+    percentage = serializers.SerializerMethodField()
+
+    def get_percentage(self, obj):
+        if not obj.total_questions:
+            return 0
+        return round(obj.score / obj.total_questions * 100)
+
+    class Meta:
+        model = QuizSubmission
+        fields = ["id", "score", "total_questions", "percentage", "submitted_at"]
+
+
+class QuizWithAttemptsSerializer(serializers.ModelSerializer):
+    """Quiz detail + student's attempt history (requires request in context)."""
+    questions = QuizQuestionSerializer(many=True, read_only=True)
+    lesson_title = serializers.CharField(source="lesson.title", read_only=True)
+    course_title = serializers.CharField(source="lesson.module.course.title", read_only=True)
+    lesson_id = serializers.IntegerField(source="lesson.id", read_only=True)
+    attempts = serializers.SerializerMethodField()
+    passed = serializers.SerializerMethodField()
+
+    def get_attempts(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return []
+        qs = QuizSubmission.objects.filter(quiz=obj, student=request.user).order_by("-submitted_at")
+        return QuizAttemptSerializer(qs, many=True).data
+
+    def get_passed(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return False
+        return QuizSubmission.objects.filter(
+            quiz=obj, student=request.user, score=models.F("total_questions")
+        ).exclude(total_questions=0).exists()
+
+    class Meta:
+        model = Quiz
+        fields = ["id", "title", "lesson", "lesson_id", "lesson_title", "course_title", "questions", "attempts", "passed"]
+
+
+class TaskAttemptSerializer(serializers.ModelSerializer):
+    """Compact task attempt record shown in student history."""
+    class Meta:
+        model = TaskSubmission
+        fields = ["id", "answer_text", "status", "score", "teacher_feedback", "passed", "submitted_at", "reviewed_at"]
+
+
+class TaskWithAttemptsSerializer(serializers.ModelSerializer):
+    """Task detail + student's attempt history (requires request in context)."""
+    lesson_title = serializers.CharField(source="lesson.title", read_only=True)
+    course_title = serializers.CharField(source="lesson.module.course.title", read_only=True)
+    lesson_id = serializers.IntegerField(source="lesson.id", read_only=True)
+    attempts = serializers.SerializerMethodField()
+    can_retry = serializers.SerializerMethodField()
+
+    def get_attempts(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return []
+        qs = TaskSubmission.objects.filter(task=obj, student=request.user).order_by("-submitted_at")
+        return TaskAttemptSerializer(qs, many=True).data
+
+    def get_can_retry(self, obj):
+        request = self.context.get("request")
+        if not request:
+            return True
+        latest = TaskSubmission.objects.filter(task=obj, student=request.user).order_by("-submitted_at").first()
+        if latest is None:
+            return True
+        if latest.status == TaskSubmission.Status.SUBMITTED:
+            return False  # Awaiting review
+        return not latest.passed  # Can retry if not passed
+
+    class Meta:
+        model = Task
+        fields = ["id", "title", "instructions", "lesson", "lesson_id", "lesson_title", "course_title", "attempts", "can_retry"]
 
 
 class ProgressRecordSerializer(serializers.ModelSerializer):

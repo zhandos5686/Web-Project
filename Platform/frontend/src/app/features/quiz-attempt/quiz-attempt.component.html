@@ -1,0 +1,109 @@
+<section class="page attempt-page">
+
+  @if (isLoading) {
+    <p class="state-text">Loading quiz...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="message error">{{ errorMessage }}</div>
+  }
+
+  @if (quiz) {
+    <div class="page-heading">
+      <div>
+        <h1>{{ quiz.title }}</h1>
+        <p class="meta">{{ quiz.course_title }} / <a [routerLink]="['/lessons', quiz.lesson_id]">{{ quiz.lesson_title }}</a></p>
+      </div>
+      @if (quiz.passed) {
+        <span class="badge passed">Passed ✓</span>
+      }
+    </div>
+
+    <!-- Attempt history -->
+    @if (quiz.attempts.length > 0) {
+      <div class="history-card">
+        <h2>Attempt history</h2>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Score</th>
+              <th>Result</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (attempt of quiz.attempts; track attempt.id; let i = $index) {
+              <tr [class.passed-row]="attempt.percentage === 100">
+                <td>{{ quiz.attempts.length - i }}</td>
+                <td>{{ attempt.score }}/{{ attempt.total_questions }}</td>
+                <td>
+                  <span class="pct-pill" [class.full]="attempt.percentage === 100">
+                    {{ attempt.percentage }}%
+                  </span>
+                </td>
+                <td>{{ attempt.submitted_at | date: 'MMM d, y, h:mm a' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Result message after submit -->
+    @if (submitMessage) {
+      <div class="message" [class.success]="lastAttempt?.percentage === 100" [class.info]="lastAttempt && lastAttempt.percentage < 100">
+        {{ submitMessage }}
+        @if (lastAttempt) {
+          — {{ lastAttempt.score }}/{{ lastAttempt.total_questions }} ({{ lastAttempt.percentage }}%)
+        }
+      </div>
+    }
+
+    <!-- Try Again button (shown when not passed and not currently showing form) -->
+    @if (!quiz.passed && !showForm) {
+      <button type="button" class="primary-btn" (click)="tryAgain()">
+        {{ quiz.attempts.length === 0 ? 'Start quiz' : 'Try again' }}
+      </button>
+    }
+
+    <!-- Quiz form -->
+    @if (showForm && !quiz.passed) {
+      <form class="quiz-form" (ngSubmit)="submit()">
+        <h2>Questions</h2>
+        @for (question of quiz.questions; track question.id; let qi = $index) {
+          <fieldset class="question-block">
+            <legend>{{ qi + 1 }}. {{ question.text }}</legend>
+            @for (choice of question.choices; track choice.id) {
+              <label class="choice-label">
+                <input
+                  type="radio"
+                  [name]="'q' + question.id"
+                  [value]="choice.id"
+                  [(ngModel)]="answers[question.id]"
+                >
+                {{ choice.text }}
+              </label>
+            }
+          </fieldset>
+        }
+
+        @if (submitMessage && !lastAttempt) {
+          <div class="message error">{{ submitMessage }}</div>
+        }
+
+        <div class="form-actions">
+          <button type="submit" class="primary-btn" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Submitting...' : 'Submit answers' }}
+          </button>
+          <button type="button" class="secondary-btn" (click)="showForm = false">Cancel</button>
+        </div>
+      </form>
+    }
+
+    @if (quiz.passed) {
+      <div class="message success">You passed this quiz with 100%!</div>
+    }
+  }
+
+</section>

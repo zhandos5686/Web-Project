@@ -1,0 +1,26 @@
+@if (tooltip) {
+  <div
+    class="sel-tooltip"
+    [class.sel-tooltip--above]="tooltip.above"
+    [class.sel-tooltip--below]="!tooltip.above"
+    [style.left.px]="tooltip.x"
+    [style.top.px]="tooltip.y"
+  >
+    <div class="sel-row">
+      <span class="sel-original">{{ tooltip.text }}</span>
+      <button class="sel-close" (click)="close()" type="button">×</button>
+    </div>
+    <div class="sel-translation">
+      @if (tooltip.translation === null) {
+        <span class="sel-loading">
+          <span class="sel-dot"></span>
+          <span class="sel-dot"></span>
+          <span class="sel-dot"></span>
+        </span>
+      } @else {
+        {{ tooltip.translation }}
+      }
+    </div>
+    <div class="sel-arrow"></div>
+  </div>
+}

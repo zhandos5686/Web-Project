@@ -6,9 +6,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Booking, LessonSlot
-from .serializers import BookingSerializer, LessonSlotSerializer, TeacherLessonSlotSerializer
+from .serializers import BookingSerializer, LessonSlotSerializer
 from notifications.models import Notification
-from notifications.views import create_notification
+from notifications.services import create_notification
 from users.models import UserProfile
 from users.permissions import IsTeacher
 
@@ -51,10 +51,10 @@ class TeacherMySlotsView(APIView):
     def get(self, request):
         slots = (
             LessonSlot.objects.filter(teacher=request.user)
-            .select_related("booking", "booking__student")
+            .select_related("teacher", "booking", "booking__student")
             .order_by("starts_at")
         )
-        return Response(TeacherLessonSlotSerializer(slots, many=True).data)
+        return Response(LessonSlotSerializer(slots, many=True).data)
 
 
 class TeacherDeleteSlotView(APIView):
@@ -153,13 +153,16 @@ class BookSlotView(APIView):
                 status=status.HTTP_200_OK,
             )
 
-        starts_fmt = slot.starts_at.strftime("%b %d, %Y at %H:%M")
         create_notification(
             recipient=slot.teacher,
-            notif_type=Notification.Type.BOOKING_CREATED,
-            title="New Booking",
-            message=f"{request.user.username} booked your slot on {starts_fmt}.",
-            link="/booking",
+            title="Live lesson slot booked",
+            message=f"{request.user.username} booked your live lesson slot on {slot.starts_at:%Y-%m-%d %H:%M}.",
+            notification_type=Notification.Type.BOOKING_CREATED,
+            metadata={
+                "slot_id": slot.id,
+                "booking_id": booking.id,
+                "student_username": request.user.username,
+            },
         )
 
         return Response(

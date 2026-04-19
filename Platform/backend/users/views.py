@@ -1,11 +1,19 @@
+from django.conf import settings
+from django.core.mail import send_mail
 from rest_framework import status, viewsets
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import UserProfile
-from .serializers import LoginSerializer, RegisterSerializer, UserProfileSerializer
+from .serializers import (
+    ForgotPasswordSerializer,
+    LoginSerializer,
+    RegisterSerializer,
+    ResetPasswordSerializer,
+    UserProfileSerializer,
+)
 
 
 def auth_response(user):
@@ -52,7 +60,53 @@ class LogoutView(APIView):
         )
 
 
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.get_user()
+        response_data = {
+            "message": "If an account with this email exists, a password reset link has been generated.",
+        }
+
+        if user:
+            token_data = serializer.build_token_data(user)
+            reset_url = (
+                f"{settings.FRONTEND_BASE_URL}/reset-password"
+                f"?uid={token_data['uid']}&token={token_data['token']}"
+            )
+            send_mail(
+                subject="Reset your English Learning Platform password",
+                message=(
+                    "Use this link to reset your password:\n\n"
+                    f"{reset_url}\n\n"
+                    "If you did not request this, you can ignore this message."
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            if settings.DEBUG:
+                response_data["reset_url"] = reset_url
+
+        return Response(response_data)
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        Token.objects.filter(user=user).delete()
+        return Response({"message": "Password has been reset successfully. You can now sign in."})
+
+
 class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = UserProfile.objects.select_related("user").all()
     serializer_class = UserProfileSerializer
+
