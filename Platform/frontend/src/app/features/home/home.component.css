@@ -1,10 +1,10 @@
 .home-hero {
   display: grid;
-  align-items: center;
-  min-height: 420px;
-  padding: 56px 32px;
+  align-items: end;
+  min-height: 500px;
+  padding: 72px 32px 64px;
   background:
-    linear-gradient(90deg, rgba(13, 24, 43, 0.9), rgba(13, 24, 43, 0.55)),
+    linear-gradient(90deg, rgba(11, 23, 45, 0.9), rgba(11, 23, 45, 0.66), rgba(11, 23, 45, 0.34)),
     url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f") center / cover;
   color: #ffffff;
 }
@@ -16,7 +16,7 @@
 
 .eyebrow {
   margin: 0 0 10px;
-  color: #b8f0cf;
+  color: #c6f3d8;
   font-size: 14px;
   font-weight: 800;
   text-transform: uppercase;
@@ -25,14 +25,14 @@
 .home-hero h1 {
   max-width: 760px;
   margin: 0 0 16px;
-  font-size: 48px;
+  font-size: clamp(40px, 6vw, 58px);
   line-height: 1.08;
 }
 
 .home-hero p {
   max-width: 700px;
   margin: 0;
-  color: #e8edf7;
+  color: #edf3fb;
   font-size: 18px;
   line-height: 1.65;
 }
@@ -45,8 +45,8 @@
 }
 
 .hero-actions .primary-link {
-  background: #2f8f52;
-  border-color: #2f8f52;
+  background: #2d7f56;
+  border-color: #2d7f56;
 }
 
 .hero-actions .secondary-link {
@@ -80,7 +80,7 @@
 
 .home-page {
   display: grid;
-  gap: 24px;
+  gap: 26px;
 }
 
 .flow-grid {
@@ -89,14 +89,20 @@
   gap: 18px;
 }
 
+.flow-grid .content-card {
+  align-content: start;
+  min-height: 210px;
+  border-color: #e1e7f1;
+}
+
 .step-number {
   display: inline-grid;
   place-items: center;
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: var(--color-soft-green);
-  color: var(--color-success);
+  background: var(--color-soft-blue);
+  color: var(--color-primary);
   font-weight: 900;
 }
 
@@ -104,10 +110,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr);
   gap: 20px;
-  padding: 24px;
+  padding: 26px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .demo-card h2 {
@@ -128,7 +135,8 @@
   gap: 4px;
   padding: 12px;
   border-radius: var(--radius);
-  background: var(--color-soft);
+  border: 1px solid #e4eaf3;
+  background: var(--color-surface-raised);
 }
 
 .credential-grid span {
@@ -139,7 +147,7 @@
 @media (max-width: 720px) {
   .home-hero {
     min-height: auto;
-    padding: 44px 16px;
+    padding: 52px 16px 44px;
   }
 
   .home-hero h1 {

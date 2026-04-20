@@ -413,7 +413,14 @@
                   <strong>{{ request.student_username }}</strong>
                   <span>{{ request.course.title }}</span>
                 </div>
-                <span class="status-pill">{{ request.status }}</span>
+                <span
+                  class="status-pill"
+                  [class.pending]="request.status === 'pending'"
+                  [class.approved]="request.status === 'approved'"
+                  [class.rejected]="request.status === 'rejected'"
+                >
+                  {{ request.status }}
+                </span>
                 <small>Updated: {{ request.updated_at | date: 'medium' }}</small>
                 @if (request.status === 'pending') {
                   <div class="inline-actions">
@@ -444,7 +451,7 @@
                   <span>{{ item.course_title }}</span>
                 </div>
                 <span>{{ item.completed_lessons }} of {{ item.total_lessons }} lessons completed</span>
-                <span class="status-pill">{{ item.percentage }}%</span>
+                <span class="status-pill completed">{{ item.percentage }}%</span>
               </article>
             }
           </div>
@@ -464,7 +471,7 @@
                   <span>{{ submission.quiz_title }}</span>
                 </div>
                 <span>{{ submission.course_title }} / {{ submission.lesson_title }}</span>
-                <span class="status-pill">Score: {{ submission.score }} / {{ submission.total_questions }}</span>
+                <span class="status-pill reviewed">Score: {{ submission.score }} / {{ submission.total_questions }}</span>
                 <small>{{ submission.submitted_at | date: 'medium' }}</small>
               </article>
             }
@@ -486,9 +493,17 @@
                 </div>
                 <p>{{ submission.answer_text }}</p>
                 <div class="submission-meta-row">
-                  <span class="status-pill">{{ submission.status }}</span>
+                  <span
+                    class="status-pill"
+                    [class.pending]="submission.status === 'submitted'"
+                    [class.reviewed]="submission.status === 'reviewed'"
+                    [class.completed]="submission.status === 'completed'"
+                    [class.rejected]="submission.status === 'rejected'"
+                  >
+                    {{ submission.status }}
+                  </span>
                   @if (submission.score !== null) {
-                    <span class="status-pill">Score: {{ submission.score }} / 100</span>
+                    <span class="status-pill reviewed">Score: {{ submission.score }} / 100</span>
                   }
                   <small>Updated: {{ submission.updated_at | date: 'medium' }}</small>
                 </div>

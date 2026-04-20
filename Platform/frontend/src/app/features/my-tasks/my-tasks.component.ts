@@ -112,44 +112,49 @@ import {
     </section>
   `,
   styles: [`
-    .section-block { display: grid; gap: 12px; }
-    .section-title { font-size: 18px; margin: 0; }
-    .stack-list { display: grid; gap: 12px; }
+    .section-block { display: grid; gap: 14px; }
+    .section-title { font-size: 21px; margin: 0; color: var(--color-text); }
+    .stack-list { display: grid; gap: 14px; }
     .content-card {
       padding: var(--space-card);
       border: 1px solid var(--color-line);
       border-radius: var(--radius);
       background: var(--color-surface);
       display: grid;
-      gap: 8px;
+      gap: 12px;
+      box-shadow: 0 10px 28px rgb(23 32 51 / 5%);
     }
-    .content-card.passed-card { border-color: #6dd9a0; background: #f3fdf7; }
-    .content-card.failed-card { border-color: #f5a0a0; background: #fff5f5; }
+    .content-card.passed-card { border-color: #b9ddc5; background: #f8fffb; }
+    .content-card.failed-card { border-color: #f0b8b8; background: #fffafa; }
     .card-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-    .card-title-row h3 { margin: 0; font-size: 16px; }
+    .card-title-row h3 { margin: 0; font-size: 18px; color: var(--color-text); }
     .card-meta { margin: 2px 0 0; font-size: 13px; color: var(--color-muted); }
     .attempts-info { margin: 0; font-size: 13px; color: var(--color-muted); }
-    .status-pill { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-    .status-pill.passed { background: #d4f4e2; color: #1a6b3c; }
-    .status-pill.failed { background: #fde8e8; color: #a42222; }
-    .status-pill.pending { background: #e8eefe; color: #183f8c; }
-    .status-pill.new { background: var(--color-soft); color: var(--color-muted); }
     .primary-link {
-      display: inline-block;
-      padding: 8px 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      min-height: 38px;
+      padding: 0 18px;
       background: var(--color-primary);
       color: #ffffff !important;
-      font-weight: 700;
+      font-weight: 800;
       font-size: 14px;
       text-decoration: none;
-      border-radius: var(--radius);
+      border-radius: var(--radius-control);
       margin-top: 4px;
+      box-shadow: 0 8px 18px rgb(36 84 166 / 15%);
     }
-    .primary-link:hover { opacity: 0.88; }
+    .primary-link:hover { background: var(--color-primary-strong); }
     .empty-state { display: grid; gap: 8px; padding: 32px; text-align: center; border: 1px dashed var(--color-line); border-radius: var(--radius); }
     .error-state { color: #a42222; }
     .state-text { color: var(--color-muted); }
     .page-heading p { color: var(--color-muted); font-size: 14px; margin: 4px 0 0; }
+    @media (max-width: 640px) {
+      .card-title-row { flex-direction: column; }
+      .primary-link { width: 100%; }
+    }
   `],
 })
 export class MyTasksComponent implements OnInit {

@@ -1,6 +1,6 @@
 .course-detail-page {
   display: grid;
-  gap: 24px;
+  gap: 26px;
 }
 
 .back-link {
@@ -10,6 +10,11 @@
   text-decoration: none;
 }
 
+.back-link:hover {
+  color: var(--color-primary-strong);
+  text-decoration: underline;
+}
+
 .course-hero {
   display: grid;
   grid-template-columns: minmax(280px, 42%) minmax(0, 1fr);
@@ -17,6 +22,7 @@
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
+  box-shadow: var(--shadow-card);
 }
 
 .course-hero:not(:has(.course-hero-media)) {
@@ -39,8 +45,8 @@
 .course-hero-content {
   display: grid;
   align-content: center;
-  gap: 16px;
-  padding: 28px;
+  gap: 18px;
+  padding: 32px;
 }
 
 .course-hero h1,
@@ -75,13 +81,19 @@
 
 .enroll-actions button {
   min-height: 40px;
-  padding: 0 16px;
-  border: 1px solid var(--color-success);
+  padding: 0 17px;
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius-control);
-  background: var(--color-success);
+  background: var(--color-primary);
   color: #ffffff;
   cursor: pointer;
   font-weight: 800;
+  box-shadow: 0 8px 18px rgb(36 84 166 / 16%);
+}
+
+.enroll-actions button:hover:not(:disabled) {
+  border-color: var(--color-primary-strong);
+  background: var(--color-primary-strong);
 }
 
 .enroll-message {
@@ -113,10 +125,10 @@
 }
 
 .course-meta span {
-  padding: 5px 8px;
+  padding: 5px 10px;
   border-radius: 999px;
-  background: var(--color-soft-green);
-  color: var(--color-success);
+  background: var(--color-soft-blue);
+  color: var(--color-primary);
   font-size: 13px;
   font-weight: 800;
 }
@@ -146,10 +158,11 @@
 .module-card {
   display: grid;
   gap: 18px;
-  padding: 22px;
+  padding: 24px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
+  box-shadow: 0 10px 28px rgb(23 32 51 / 5%);
 }
 
 .module-heading {
@@ -184,14 +197,20 @@
 
 .lesson-item {
   display: grid;
-  gap: 13px;
-  padding: 16px 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
   border-bottom: 1px solid #e6eaf2;
+  border-radius: var(--radius-control);
   counter-increment: lesson;
 }
 
+.lesson-item:hover {
+  background: #f8fbff;
+}
+
 .lesson-item:last-child {
-  padding-bottom: 0;
   border-bottom: 0;
 }
 
@@ -235,7 +254,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  padding-left: 38px;
   padding-top: 2px;
 }
 
@@ -254,6 +272,7 @@
 .primary-action {
   background: var(--color-primary);
   color: #ffffff;
+  box-shadow: 0 8px 18px rgb(36 84 166 / 15%);
 }
 
 .secondary-action {
@@ -263,7 +282,12 @@
 }
 
 .lesson-action:hover {
-  filter: brightness(0.97);
+  border-color: var(--color-primary);
+  background: var(--color-soft-blue);
+}
+
+.primary-action:hover {
+  background: var(--color-primary-strong);
 }
 
 .muted {
@@ -290,6 +314,11 @@
   .lesson-copy,
   .lesson-actions {
     padding-left: 0;
+  }
+
+  .lesson-item {
+    grid-template-columns: 1fr;
+    padding: 14px 0;
   }
 
   .lesson-copy::before {

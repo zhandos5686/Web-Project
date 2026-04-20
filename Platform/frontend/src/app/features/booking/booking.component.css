@@ -1,6 +1,6 @@
 .booking-page {
   display: grid;
-  gap: 22px;
+  gap: 24px;
 }
 
 .page-heading {
@@ -22,11 +22,12 @@
 
 .booking-card {
   display: grid;
-  gap: 14px;
-  padding: var(--space-card);
+  gap: 16px;
+  padding: 22px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
+  box-shadow: 0 10px 28px rgb(23 32 51 / 5%);
 }
 
 .booking-card h2 {
@@ -64,11 +65,22 @@
   color: #ffffff;
   cursor: pointer;
   font-weight: 800;
+  box-shadow: 0 8px 18px rgb(36 84 166 / 14%);
+}
+
+.booking-card button:hover:not(:disabled) {
+  border-color: var(--color-primary-strong);
+  background: var(--color-primary-strong);
 }
 
 .booking-card .danger-button {
   border-color: var(--color-danger);
   background: var(--color-danger);
+  box-shadow: none;
+}
+
+.booking-card .danger-button:hover:not(:disabled) {
+  background: #962222;
 }
 
 .booking-card a {
@@ -91,10 +103,11 @@
 
 .item-list article {
   display: grid;
-  gap: 6px;
-  padding: 12px;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #e3e9f2;
   border-radius: var(--radius);
-  background: var(--color-soft);
+  background: var(--color-surface-raised);
   color: var(--color-muted);
 }
 
@@ -142,9 +155,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 12px;
+  padding: 14px;
+  border: 1px solid #e3e9f2;
   border-radius: var(--radius);
-  background: var(--color-soft);
+  background: var(--color-surface-raised);
   color: var(--color-muted);
 }
 
@@ -162,7 +176,7 @@
   overflow: hidden;
   border: 1px solid #e0e5ee;
   border-radius: var(--radius);
-  background: var(--color-soft);
+  background: var(--color-surface-raised);
 }
 
 .booked-summary {
@@ -200,7 +214,8 @@
 .booked-details {
   display: grid;
   gap: 7px;
-  padding: 0 12px 12px;
+  padding: 0 14px 14px;
+  border-top: 1px solid #edf1f7;
   color: var(--color-muted);
 }
 

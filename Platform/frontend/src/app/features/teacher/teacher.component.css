@@ -1,6 +1,6 @@
 .teacher-page {
   display: grid;
-  gap: 24px;
+  gap: 28px;
 }
 
 .page-heading {
@@ -9,7 +9,7 @@
 
 .teacher-section {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .section-heading {
@@ -22,7 +22,8 @@
 .section-heading h2 {
   margin: 0;
   color: var(--color-text);
-  font-size: 24px;
+  font-size: 25px;
+  line-height: 1.2;
 }
 
 .section-heading p {
@@ -33,8 +34,8 @@
 
 .creation-layout {
   display: grid;
-  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(240px, 292px) minmax(0, 1fr);
+  gap: 20px;
   align-items: start;
 }
 
@@ -59,11 +60,12 @@
 .teacher-card,
 .reference-panel {
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  gap: 16px;
+  padding: 20px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
+  box-shadow: 0 10px 28px rgb(23 32 51 / 5%);
 }
 
 .teacher-card h3,
@@ -85,7 +87,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #e6eaf2;
 }
 
@@ -100,10 +102,16 @@
   display: grid;
   align-content: start;
   gap: 12px;
-  padding: 14px;
+  padding: 16px;
   border: 1px solid #e0e5ee;
   border-radius: var(--radius);
-  background: #fbfcff;
+  background: var(--color-surface-raised);
+}
+
+.teacher-form:hover,
+.manage-item:hover,
+.submission-list article:hover {
+  border-color: #cbd7e8;
 }
 
 .compact-form {
@@ -158,6 +166,14 @@
   color: #ffffff;
   cursor: pointer;
   font-weight: 800;
+  box-shadow: 0 8px 18px rgb(36 84 166 / 14%);
+}
+
+.teacher-card button:hover:not(:disabled),
+.teacher-form button:hover:not(:disabled),
+.review-form button:hover:not(:disabled) {
+  border-color: var(--color-primary-strong);
+  background: var(--color-primary-strong);
 }
 
 .teacher-card button:disabled,
@@ -172,19 +188,31 @@
 .danger-button {
   border-color: var(--color-danger) !important;
   background: var(--color-danger) !important;
+  box-shadow: none !important;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: #962222 !important;
 }
 
 .secondary-button {
-  border-color: #c9d1df !important;
-  background: #eef2f7 !important;
-  color: var(--color-text) !important;
+  border-color: #cbd5e3 !important;
+  background: #ffffff !important;
+  color: var(--color-primary) !important;
+  box-shadow: none !important;
+}
+
+.secondary-button:hover:not(:disabled) {
+  border-color: #aec0d9 !important;
+  background: var(--color-soft-blue) !important;
 }
 
 .guide-card {
   position: sticky;
-  top: 18px;
+  top: 20px;
   gap: 12px;
-  background: #f9fbff;
+  border-color: #cbd7e8;
+  background: linear-gradient(180deg, #f9fbff, #ffffff);
 }
 
 .guide-card ol {
@@ -206,9 +234,9 @@
 }
 
 .helper-text {
-  padding: 8px 10px;
+  padding: 9px 11px;
   border-radius: var(--radius-control);
-  background: #f3f6fb;
+  background: var(--color-soft-blue);
   color: #344056 !important;
   font-size: 14px;
   font-weight: 800;
@@ -216,14 +244,14 @@
 
 .reference-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
 }
 
 .reference-panel {
   align-content: start;
-  gap: 10px;
-  padding: 14px;
+  gap: 12px;
+  padding: 16px;
 }
 
 .reference-heading {
@@ -231,6 +259,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #edf1f7;
 }
 
 .reference-heading strong {
@@ -241,8 +271,8 @@
   min-width: 28px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: #eef2f7;
-  color: #344056;
+  background: var(--color-soft-blue);
+  color: var(--color-primary);
   font-size: 13px;
   font-weight: 800;
   text-align: center;
@@ -265,7 +295,7 @@
 }
 
 .management-grid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 .management-panel {
@@ -279,11 +309,12 @@
 
 .manage-item {
   display: grid;
-  gap: 10px;
-  padding: 12px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid #e3e8f1;
   border-radius: var(--radius);
-  background: #f8faff;
+  background: var(--color-surface-raised);
+  transition: border-color 140ms ease, background 140ms ease;
 }
 
 .manage-summary {
@@ -307,7 +338,7 @@
 .confirm-delete {
   display: grid;
   gap: 10px;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-control);
   background: var(--color-surface);
@@ -335,7 +366,7 @@
 .activity-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .activity-card {
@@ -353,12 +384,13 @@
 
 .submission-list article {
   display: grid;
-  gap: 8px;
-  padding: 12px;
+  gap: 10px;
+  padding: 14px;
   border: 1px solid #e3e8f1;
   border-radius: var(--radius);
-  background: #f8faff;
+  background: var(--color-surface-raised);
   color: var(--color-muted);
+  transition: border-color 140ms ease, background 140ms ease;
 }
 
 .submission-main {
@@ -389,7 +421,7 @@
 .review-form {
   display: grid;
   gap: 12px;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
@@ -399,6 +431,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.inline-actions button {
+  min-height: 36px;
 }
 
 @media (max-width: 1020px) {

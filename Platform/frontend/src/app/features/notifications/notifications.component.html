@@ -32,7 +32,7 @@
             @if (!notification.is_read) {
               <button type="button" (click)="markRead(notification)">Mark read</button>
             } @else {
-              <span class="read-label">Read</span>
+              <span class="status-pill read">Read</span>
             }
             <button type="button" class="danger-button" (click)="deleteNotification(notification.id)">Delete</button>
           </div>

@@ -60,7 +60,12 @@
                 <strong>{{ request.course.title }}</strong>
                 <span>Requested: {{ request.created_at | date: 'mediumDate' }}</span>
               </div>
-              <span class="status-pill" [class.rejected]="request.status === 'rejected'">
+              <span
+                class="status-pill"
+                [class.pending]="request.status === 'pending'"
+                [class.approved]="request.status === 'approved'"
+                [class.rejected]="request.status === 'rejected'"
+              >
                 {{ request.status }}
               </span>
             </article>
