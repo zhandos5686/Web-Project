@@ -138,6 +138,12 @@ export class BookingComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.errorMessage = error.error?.message || 'Could not book this slot.';
+        if (error.status === 400 && error.error?.status === 'already_booked') {
+          this.availableSlots = this.availableSlots.filter((slot) => slot.id !== slotId);
+          if (error.error.booking) {
+            this.myBookings = [error.error.booking, ...this.myBookings];
+          }
+        }
         this.cdr.detectChanges();
       },
     });

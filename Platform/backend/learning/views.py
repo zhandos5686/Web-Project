@@ -551,7 +551,7 @@ class SubmitQuizView(APIView):
             if question_id is not None and choice_id is not None:
                 answer_map[int(question_id)] = int(choice_id)
 
-        questions = list(quiz.questions.prefetch_related("choices"))
+        questions = list(quiz.questions.all())
         score = 0
         for question in questions:
             selected_choice_id = answer_map.get(question.id)
@@ -948,7 +948,7 @@ class SubmitQuizByIdView(APIView):
             if qid is not None and cid is not None:
                 answer_map[int(qid)] = int(cid)
 
-        questions = list(quiz.questions.prefetch_related("choices"))
+        questions = list(quiz.questions.all())
         score = sum(
             1 for q in questions
             if QuizChoice.objects.filter(id=answer_map.get(q.id), question=q, is_correct=True).exists()

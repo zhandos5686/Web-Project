@@ -14,12 +14,18 @@
       }
 
       @if (lesson.youtube_url) {
-        <div class="youtube-box">
-          <div>
-            <strong>Video lesson</strong>
-            <span>Open the YouTube material in a new tab.</span>
+        <div class="youtube-embed">
+          <div id="youtube-player"></div>
+        </div>
+        <div class="youtube-progress">
+          <div class="youtube-progress-track">
+            <div class="youtube-progress-fill" [style.width.%]="youtubeProgress"></div>
           </div>
-          <a class="secondary-button" [href]="lesson.youtube_url" target="_blank" rel="noreferrer">YouTube lesson</a>
+          @if (youtubeWatched) {
+            <span class="youtube-progress-label watched">Watched</span>
+          } @else {
+            <span class="youtube-progress-label">{{ youtubeProgress }}% watched</span>
+          }
         </div>
       }
     </article>

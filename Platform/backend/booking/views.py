@@ -134,7 +134,7 @@ class BookSlotView(APIView):
                     "status": "already_booked",
                     "message": "This live lesson slot is already booked.",
                 },
-                status=status.HTTP_200_OK,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -150,7 +150,7 @@ class BookSlotView(APIView):
                     "message": "This live lesson slot is already booked.",
                     "booking": BookingSerializer(booking).data,
                 },
-                status=status.HTTP_200_OK,
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         create_notification(

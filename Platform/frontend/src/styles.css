@@ -1,3 +1,12 @@
+/* YouTube player — must be global because the iframe is created by the YT API,
+   not by Angular's template, so component-scoped styles don't apply to it. */
+.youtube-embed iframe {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Design tokens  —  Blue & Yellow educational palette
    ═══════════════════════════════════════════════════════════════════════════ */
