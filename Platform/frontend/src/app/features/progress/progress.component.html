@@ -1,7 +1,7 @@
 <section class="page progress-page">
   <div class="page-heading">
     <h1>Progress</h1>
-    <p>Your completed lessons are calculated for each enrolled course.</p>
+    <p>Your overall course completion including lessons and assignments.</p>
   </div>
 
   @if (loadError) {
@@ -16,14 +16,36 @@
       <div class="progress-list">
         @for (item of progressItems; track item.course_id) {
           <article class="progress-card">
-            <div>
-              <h2>{{ item.course_title }}</h2>
-              <p>{{ item.completed_lessons }} of {{ item.total_lessons }} lessons completed</p>
+            <h2>{{ item.course_title }}</h2>
+
+            <div class="progress-stats">
+              <div class="progress-stat">
+                <span>Lessons watched</span>
+                <span>{{ item.completed_lessons }} / {{ item.total_lessons }} &nbsp;<strong>{{ item.watched_percent }}%</strong></span>
+              </div>
+
+              @if (item.total_tasks > 0) {
+                <div class="progress-stat">
+                  <span>Assignments completed</span>
+                  <span>{{ item.completed_tasks }} / {{ item.total_tasks }} &nbsp;<strong>{{ item.tasks_percent }}%</strong></span>
+                </div>
+              } @else {
+                <div class="progress-stat">
+                  <span>Assignments</span>
+                  <span>No assignments in this course</span>
+                </div>
+              }
             </div>
-            <strong>{{ item.percentage }}%</strong>
-            <div class="progress-bar" aria-label="Course progress">
-              <span [style.width.%]="item.percentage"></span>
+
+            <div class="progress-overall">
+              <span>Overall progress</span>
+              <strong>{{ item.overall_progress }}%</strong>
             </div>
+
+            <div class="progress-bar" aria-label="Course overall progress">
+              <span [style.width.%]="item.overall_progress"></span>
+            </div>
+
             <a [routerLink]="['/courses', item.course_id]">Open course</a>
           </article>
         }

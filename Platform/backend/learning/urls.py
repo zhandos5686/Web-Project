@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     CompleteLessonView,
+    CourseDetailProgressView,
     EnrollCourseView,
     EnrollmentViewSet,
     LessonQuizView,
@@ -87,5 +88,6 @@ urlpatterns = [
     path("my-enrollment-requests/", MyEnrollmentRequestsView.as_view(), name="my-enrollment-requests"),
     path("my-task-submissions/", MyTaskSubmissionsView.as_view(), name="my-task-submissions"),
     path("progress-summary/", ProgressSummaryView.as_view(), name="progress-summary"),
+    path("courses/<int:course_id>/progress/", CourseDetailProgressView.as_view(), name="course-detail-progress"),
     path("", include(router.urls)),
 ]

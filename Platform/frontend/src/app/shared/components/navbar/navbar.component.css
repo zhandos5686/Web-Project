@@ -1,27 +1,39 @@
+/* ── Shell ────────────────────────────────────────────────────────────────── */
 .navbar {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 24px;
   min-height: 68px;
   padding: 0 32px;
-  border-bottom: 1px solid var(--color-line);
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 8px 24px rgb(23 32 51 / 5%);
+  background: var(--color-primary);        /* solid dark blue */
+  box-shadow: 0 2px 12px rgb(15 43 109 / 35%);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
+/* ── Brand ────────────────────────────────────────────────────────────────── */
 .brand {
   flex: 0 0 auto;
-  color: var(--color-text);
+  color: #ffffff;
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 700;
   text-decoration: none;
+  letter-spacing: -0.2px;
 }
 
+/* Yellow dot accent on brand to hint the two-colour scheme */
+.brand::after {
+  content: '.';
+  color: var(--color-accent);
+}
+
+/* ── Nav links ────────────────────────────────────────────────────────────── */
 .nav-links {
   display: flex;
   flex: 1 1 auto;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 2px;
 }
 
 .nav-links a,
@@ -34,50 +46,58 @@
 
 .nav-links a,
 .auth-link {
-  padding: 0 11px;
+  padding: 0 13px;
   border: 0;
-  border-radius: var(--radius-control);
+  border-radius: 6px;
   background: transparent;
-  color: #4e5870;
+  color: rgb(255 255 255 / 80%);
   font-size: 14px;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
 }
 
+/* Active state: subtle white-tinted pill */
 .nav-links a.active,
 .auth-link.active {
-  background: #e7eefc;
-  color: var(--color-primary);
+  background: rgb(255 255 255 / 12%);
+  color: #ffffff;
+  font-weight: 600;
 }
 
+/* Hover: yellow accent underline feel */
 .nav-links a:hover,
 .auth-link:hover {
-  background: var(--color-soft);
-  color: var(--color-primary);
+  background: rgb(255 255 255 / 10%);
+  color: #ffffff;
 }
 
+/* ── User box ─────────────────────────────────────────────────────────────── */
 .user-box {
   flex: 0 0 auto;
   gap: 10px;
-  color: #4e5870;
+  color: rgb(255 255 255 / 80%);
   font-size: 14px;
 }
 
 .user-name {
-  color: var(--color-text);
-  font-weight: 800;
+  color: #ffffff;
+  font-weight: 600;
 }
 
+/* Yellow role pill */
 .user-role {
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: var(--color-soft-blue);
-  color: var(--color-primary);
+  background: var(--color-accent);
+  color: var(--color-primary);            /* dark blue text on yellow */
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: capitalize;
 }
 
+/* ── Notification button ──────────────────────────────────────────────────── */
 .notification-menu {
   position: relative;
   display: inline-flex;
@@ -87,34 +107,34 @@
 .notification-button {
   position: relative;
   display: inline-flex;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   align-items: center;
   justify-content: center;
   padding: 0;
-  border: 1px solid transparent;
+  border: 1.5px solid transparent;
   border-radius: 999px;
   background: transparent;
-  color: #4e5870;
+  color: rgb(255 255 255 / 80%);
   cursor: pointer;
-  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
 .notification-button:hover,
 .notification-button:focus-visible {
-  border-color: var(--color-line);
-  background: var(--color-soft);
-  color: var(--color-primary);
+  background: rgb(255 255 255 / 12%);
+  border-color: rgb(255 255 255 / 25%);
+  color: #ffffff;
 }
 
 .notification-button:focus-visible {
   outline: 0;
-  box-shadow: 0 0 0 3px rgb(24 63 140 / 14%);
+  box-shadow: 0 0 0 3px rgb(251 191 36 / 45%);  /* yellow focus ring */
 }
 
 .notification-icon {
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -122,6 +142,7 @@
   stroke-width: 1.8;
 }
 
+/* Yellow notification badge */
 .notification-badge {
   position: absolute;
   top: -3px;
@@ -130,15 +151,16 @@
   height: 17px;
   padding: 0 5px;
   border-radius: 999px;
-  border: 2px solid #ffffff;
-  background: var(--color-danger);
-  color: #ffffff;
+  border: 2px solid var(--color-primary);
+  background: var(--color-accent);       /* yellow badge */
+  color: var(--color-primary);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 13px;
   text-align: center;
 }
 
+/* ── Notification dropdown ────────────────────────────────────────────────── */
 .notification-dropdown {
   position: absolute;
   z-index: 20;
@@ -151,7 +173,7 @@
   border: 1px solid var(--color-line);
   border-radius: var(--radius);
   background: var(--color-surface);
-  box-shadow: 0 20px 44px rgb(23 32 51 / 16%);
+  box-shadow: 0 16px 48px rgb(15 43 109 / 18%);
 }
 
 .notification-dropdown-heading {
@@ -164,59 +186,55 @@
 .notification-dropdown-heading a {
   color: var(--color-primary);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
   text-decoration: none;
 }
 
-.notification-preview-list {
-  display: grid;
-  gap: 8px;
-}
+.notification-preview-list { display: grid; gap: 8px; }
 
 .notification-preview {
   position: relative;
   display: grid;
   gap: 5px;
   width: 100%;
-  padding: 11px 12px;
-  border: 1px solid #e0e5ee;
-  border-radius: var(--radius);
+  padding: 11px 13px;
+  border: 1px solid var(--color-line);
+  border-radius: calc(var(--radius) - 2px);
   background: var(--color-surface);
-  color: #4e5870;
+  color: var(--color-muted);
   cursor: pointer;
   text-align: left;
   transition: background 140ms ease, border-color 140ms ease;
 }
 
 .notification-preview:hover {
-  border-color: #c9d1df;
-  background: #f9fbff;
+  border-color: #C7D7F9;
+  background: var(--color-soft-blue);
 }
 
 .notification-preview.unread {
-  border-color: #b9c8ea;
-  background: #f6f9ff;
+  border-color: #C7D7F9;
+  background: var(--color-soft-blue);
 }
 
+/* Yellow dot for unread */
 .notification-preview.unread::before {
   position: absolute;
   top: 14px;
   right: 12px;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
-  background: var(--color-primary);
+  background: var(--color-accent);
   content: "";
 }
 
 .notification-preview strong {
   color: var(--color-text);
-  padding-right: 16px;
+  padding-right: 18px;
 }
 
-.notification-preview span {
-  line-height: 1.4;
-}
+.notification-preview span { line-height: 1.4; }
 
 .notification-preview small,
 .notification-dropdown p {
@@ -225,6 +243,7 @@
   font-size: 13px;
 }
 
+/* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 760px) {
   .navbar {
     align-items: flex-start;
@@ -233,13 +252,8 @@
     padding: 16px;
   }
 
-  .nav-links {
-    width: 100%;
-  }
-
-  .user-box {
-    flex-wrap: wrap;
-  }
+  .nav-links { width: 100%; }
+  .user-box  { flex-wrap: wrap; }
 
   .notification-dropdown {
     right: auto;

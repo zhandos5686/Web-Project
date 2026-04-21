@@ -13,6 +13,11 @@ export interface CourseProgress {
   course_title: string;
   total_lessons: number;
   completed_lessons: number;
+  watched_percent: number;
+  total_tasks: number;
+  completed_tasks: number;
+  tasks_percent: number;
+  overall_progress: number;
   percentage: number;
 }
 
@@ -26,5 +31,9 @@ export class ProgressService {
 
   getProgressSummary(): Observable<CourseProgress[]> {
     return this.api.get<CourseProgress[]>('/learning/progress-summary/');
+  }
+
+  getCourseProgress(courseId: number): Observable<CourseProgress> {
+    return this.api.get<CourseProgress>(`/learning/courses/${courseId}/progress/`);
   }
 }

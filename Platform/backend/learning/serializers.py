@@ -335,4 +335,9 @@ class CourseProgressSerializer(serializers.Serializer):
     course_title = serializers.CharField()
     total_lessons = serializers.IntegerField()
     completed_lessons = serializers.IntegerField()
-    percentage = serializers.IntegerField()
+    watched_percent = serializers.IntegerField()
+    total_tasks = serializers.IntegerField()
+    completed_tasks = serializers.IntegerField()
+    tasks_percent = serializers.IntegerField()
+    overall_progress = serializers.IntegerField()
+    percentage = serializers.IntegerField()  # kept for backward compatibility

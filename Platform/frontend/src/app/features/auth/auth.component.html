@@ -1,8 +1,6 @@
 <section class="page auth-page">
-  <div class="auth-header">
-    <h1>Authentication</h1>
-    <p>Sign in or create a student/teacher account for the V1 platform.</p>
-  </div>
+
+  <p class="auth-brand">English Learning Platform</p>
 
   <div class="auth-card">
     <div class="mode-tabs" aria-label="Authentication mode">
@@ -26,7 +24,10 @@
           <input type="password" formControlName="password" autocomplete="current-password">
         </label>
 
-        <button type="submit" [disabled]="isSubmitting">Login</button>
+        <button type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
+        </button>
+
         <a class="forgot-link" routerLink="/forgot-password">Forgot password?</a>
       </form>
     } @else {
@@ -59,8 +60,11 @@
           <textarea formControlName="bio" rows="3"></textarea>
         </label>
 
-        <button type="submit" [disabled]="isSubmitting">Create account</button>
+        <button type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Creating account…' : 'Create account' }}
+        </button>
       </form>
     }
   </div>
+
 </section>

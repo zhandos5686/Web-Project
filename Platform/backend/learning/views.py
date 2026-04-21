@@ -384,6 +384,84 @@ class CompleteLessonView(APIView):
         )
 
 
+def _compute_course_progress(user, course):
+    """Return a progress dict for one course and one student."""
+    lesson_ids = [
+        lesson.id
+        for module in course.modules.all()
+        for lesson in module.lessons.all()
+    ]
+    total_lessons = len(lesson_ids)
+
+    completed_lessons = ProgressRecord.objects.filter(
+        student=user,
+        lesson_id__in=lesson_ids,
+        is_completed=True,
+    ).count()
+
+    quiz_ids = list(Quiz.objects.filter(lesson_id__in=lesson_ids).values_list("id", flat=True))
+    task_ids = list(Task.objects.filter(lesson_id__in=lesson_ids).values_list("id", flat=True))
+    total_tasks = len(quiz_ids) + len(task_ids)
+
+    completed_quizzes_count = (
+        QuizSubmission.objects.filter(
+            student=user,
+            quiz_id__in=quiz_ids,
+            total_questions__gt=0,
+        )
+        .filter(score=F("total_questions"))
+        .values("quiz_id")
+        .distinct()
+        .count()
+    ) if quiz_ids else 0
+
+    completed_tasks_count = (
+        TaskSubmission.objects.filter(
+            student=user,
+            task_id__in=task_ids,
+            passed=True,
+        )
+        .values("task_id")
+        .distinct()
+        .count()
+    ) if task_ids else 0
+
+    completed_tasks = completed_quizzes_count + completed_tasks_count
+
+    if total_lessons == 0 and total_tasks == 0:
+        watched_percent = 0
+        tasks_percent = 0
+        overall_progress = 0
+    elif total_tasks == 0:
+        watched_percent = round((completed_lessons / total_lessons) * 100)
+        tasks_percent = 0
+        overall_progress = watched_percent
+    elif total_lessons == 0:
+        watched_percent = 0
+        tasks_percent = round((completed_tasks / total_tasks) * 100)
+        overall_progress = tasks_percent
+    else:
+        watched_percent = round((completed_lessons / total_lessons) * 100)
+        tasks_percent = round((completed_tasks / total_tasks) * 100)
+        overall_progress = round(
+            (completed_lessons / total_lessons) * 50
+            + (completed_tasks / total_tasks) * 50
+        )
+
+    return {
+        "course_id": course.id,
+        "course_title": course.title,
+        "total_lessons": total_lessons,
+        "completed_lessons": completed_lessons,
+        "watched_percent": watched_percent,
+        "total_tasks": total_tasks,
+        "completed_tasks": completed_tasks,
+        "tasks_percent": tasks_percent,
+        "overall_progress": overall_progress,
+        "percentage": overall_progress,
+    }
+
+
 class ProgressSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -395,33 +473,30 @@ class ProgressSummaryView(APIView):
             .order_by("-created_at")
         )
 
-        progress_items = []
-        for enrollment in enrollments:
-            course = enrollment.course
-            lesson_ids = [
-                lesson.id
-                for module in course.modules.all()
-                for lesson in module.lessons.all()
-            ]
-            total_lessons = len(lesson_ids)
-            completed_lessons = ProgressRecord.objects.filter(
-                student=request.user,
-                lesson_id__in=lesson_ids,
-                is_completed=True,
-            ).count()
-            percentage = round((completed_lessons / total_lessons) * 100) if total_lessons else 0
-
-            progress_items.append(
-                {
-                    "course_id": course.id,
-                    "course_title": course.title,
-                    "total_lessons": total_lessons,
-                    "completed_lessons": completed_lessons,
-                    "percentage": percentage,
-                }
-            )
+        progress_items = [
+            _compute_course_progress(request.user, enrollment.course)
+            for enrollment in enrollments
+        ]
 
         serializer = CourseProgressSerializer(progress_items, many=True)
+        return Response(serializer.data)
+
+
+class CourseDetailProgressView(APIView):
+    """Per-course progress breakdown: lessons + assignments + overall."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, course_id):
+        course = get_object_or_404(
+            Course.objects.prefetch_related("modules__lessons"),
+            id=course_id,
+        )
+        if not Enrollment.objects.filter(student=request.user, course=course).exists():
+            return Response({"detail": "Not enrolled."}, status=status.HTTP_403_FORBIDDEN)
+
+        data = _compute_course_progress(request.user, course)
+        serializer = CourseProgressSerializer(data)
         return Response(serializer.data)
 
 

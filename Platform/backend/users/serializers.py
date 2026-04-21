@@ -68,7 +68,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
         email = self.validated_data["email"]
         return User.objects.filter(email__iexact=email, is_active=True).first()
 
-    @staticmethod
+    @staticmethod #Это часть системы сброса пароля. Она генерирует данные для токена сброса пароля, который будет отправлен пользователю по электронной почте. Данные включают в себя уникальный идентификатор пользователя (uid) и токен, который проверяет подлинность запроса на сброс пароля.
     def build_token_data(user):
         return {
             "uid": urlsafe_base64_encode(force_bytes(user.pk)),
@@ -76,23 +76,23 @@ class ForgotPasswordSerializer(serializers.Serializer):
         }
 
 
-class ResetPasswordSerializer(serializers.Serializer):
+class ResetPasswordSerializer(serializers.Serializer): # эта часть системы сброса пароля. Она принимает данные от пользователя, включая uid, токен и новый пароль. Она проверяет валидность данных и, если все в порядке, обновляет пароль пользователя.
     uid = serializers.CharField()
     token = serializers.CharField()
     new_password = serializers.CharField(write_only=True, min_length=8)
-    confirm_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True) # это поле для подтверждения нового пароля. Оно должно совпадать с полем new_password, чтобы убедиться, что пользователь не допустил ошибку при вводе нового пароля. В методе validate выполняется проверка на совпадение этих двух полей, и если они не совпадают, возникает ошибка валидации.
 
     def validate(self, attrs):
         if attrs["new_password"] != attrs["confirm_password"]:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
 
         try:
-            user_id = force_str(urlsafe_base64_decode(attrs["uid"]))
-            user = User.objects.get(pk=user_id, is_active=True)
+            user_id = force_str(urlsafe_base64_decode(attrs["uid"])) # Этот код декодирует uid, который был закодирован с помощью urlsafe_base64_encode при генерации токена сброса пароля. Он преобразует закодированный uid обратно в строку, которая представляет собой первичный ключ пользователя. Затем он пытается получить объект пользователя из базы данных, используя этот первичный ключ и проверяя, что пользователь активен. Если декодирование или получение пользователя не удается, возникает ошибка валидации.
+            user = User.objects.get(pk=user_id, is_active=True) #what is the pk? pk stands for "primary key". In Django, each model has a primary key field that uniquely identifies each record in the database. By default, Django creates an auto-incrementing integer field called "id" as the primary key for each model. In this code, pk refers to the primary key of the User model, which is used to retrieve the user object from the database based on the decoded uid.
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             raise serializers.ValidationError({"uid": "Invalid password reset link."})
 
-        if not default_token_generator.check_token(user, attrs["token"]):
+        if not default_token_generator.check_token(user, attrs["token"]): # Этот код проверяет действительность токена сброса пароля, используя встроенный генератор токенов Django. Он принимает объект пользователя и токен, который был передан в запросе. Метод check_token возвращает True, если токен действителен для данного пользователя, и False в противном случае. Если токен недействителен, возникает ошибка валидации.
             raise serializers.ValidationError({"token": "Invalid or expired password reset token."})
 
         password_validation.validate_password(attrs["new_password"], user=user)
