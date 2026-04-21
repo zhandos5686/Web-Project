@@ -1,10 +1,10 @@
 from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import status, viewsets
-from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import UserProfile
 from .serializers import (
     ForgotPasswordSerializer,
@@ -16,9 +16,10 @@ from .serializers import (
 
 def auth_response(user):
     profile, _ = UserProfile.objects.get_or_create(user=user)
-    token, _ = Token.objects.get_or_create(user=user)
+    refresh = RefreshToken.for_user(user)
     return {
-        "token": token.key,
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
         "user": UserProfileSerializer(profile).data,
     }
 
@@ -50,7 +51,6 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        Token.objects.filter(user=request.user).delete()
         return Response(
             {
                 "message": "Logged out successfully.",
@@ -98,8 +98,7 @@ class ResetPasswordView(APIView):
     def post(self, request):
         serializer = ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        Token.objects.filter(user=user).delete()
+        serializer.save()
         return Response({"message": "Password has been reset successfully. You can now sign in."})
 
 
@@ -107,4 +106,3 @@ class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = UserProfile.objects.select_related("user").all()
     serializer_class = UserProfileSerializer
-

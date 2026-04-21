@@ -4,8 +4,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import UserProfile
 from .models import Booking, LessonSlot
@@ -33,8 +33,8 @@ class BookingApiTest(TestCase):
         self.ends_at = self.starts_at + timedelta(hours=1)
 
     def authenticate(self, user):
-        token, _ = Token.objects.get_or_create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+        access = RefreshToken.for_user(user).access_token
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
     def test_teacher_can_create_slot_and_view_own_slots(self):
         self.authenticate(self.teacher)

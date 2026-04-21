@@ -32,7 +32,8 @@ class AuthApiTest(TestCase):
         )
 
         self.assertEqual(register_response.status_code, 201)
-        self.assertIn("token", register_response.data)
+        self.assertIn("access", register_response.data)
+        self.assertIn("refresh", register_response.data)
         self.assertEqual(register_response.data["user"]["role"], UserProfile.Role.STUDENT)
 
         login_response = self.client.post(
@@ -42,9 +43,20 @@ class AuthApiTest(TestCase):
         )
 
         self.assertEqual(login_response.status_code, 200)
-        token = login_response.data["token"]
+        self.assertIn("access", login_response.data)
+        self.assertIn("refresh", login_response.data)
+        access = login_response.data["access"]
+        refresh = login_response.data["refresh"]
 
-        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+        refresh_response = self.client.post(
+            reverse("auth-refresh"),
+            {"refresh": refresh},
+            format="json",
+        )
+        self.assertEqual(refresh_response.status_code, 200)
+        self.assertIn("access", refresh_response.data)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
         current_user_response = self.client.get(reverse("auth-current-user"))
 
         self.assertEqual(current_user_response.status_code, 200)
@@ -54,6 +66,7 @@ class AuthApiTest(TestCase):
         logout_response = self.client.post(reverse("auth-logout"))
         self.assertEqual(logout_response.status_code, 200)
 
+        self.client.credentials()
         current_user_after_logout_response = self.client.get(reverse("auth-current-user"))
         self.assertEqual(current_user_after_logout_response.status_code, 401)
 
@@ -117,7 +130,8 @@ class PasswordResetApiTest(TestCase):
             format="json",
         )
         self.assertEqual(login_response.status_code, 200)
-        self.assertIn("token", login_response.data)
+        self.assertIn("access", login_response.data)
+        self.assertIn("refresh", login_response.data)
 
     def test_invalid_token_is_rejected(self):
         response = self.client.post(

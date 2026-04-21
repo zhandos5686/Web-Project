@@ -4,8 +4,8 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from booking.models import Booking, LessonSlot
 from courses.models import Course, Lesson, Module
@@ -36,8 +36,8 @@ class NotificationApiTest(TestCase):
         Enrollment.objects.create(student=self.student, course=self.course)
 
     def authenticate(self, user):
-        token, _ = Token.objects.get_or_create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+        access = RefreshToken.for_user(user).access_token
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
     def test_student_booking_creates_teacher_notification(self):
         starts_at = timezone.now() + timedelta(days=1)

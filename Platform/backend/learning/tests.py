@@ -1,8 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from courses.models import Category, Course, Lesson, Module
 from users.models import UserProfile
@@ -62,8 +62,8 @@ class EnrollmentApiTest(TestCase):
         )
 
     def authenticate(self, user):
-        token, _ = Token.objects.get_or_create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+        access = RefreshToken.for_user(user).access_token
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
 
     def test_student_can_request_enrollment_and_cannot_duplicate_pending_request(self):
         self.authenticate(self.student)
