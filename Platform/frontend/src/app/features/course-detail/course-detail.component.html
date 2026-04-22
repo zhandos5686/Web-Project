@@ -70,9 +70,6 @@
                         }
                       </div>
                       <div class="lesson-actions">
-                        @if (lesson.youtube_url) {
-                          <a class="lesson-action secondary-action" [href]="lesson.youtube_url" target="_blank" rel="noreferrer">YouTube lesson</a>
-                        }
                         <a class="lesson-action primary-action" [routerLink]="['/lessons', lesson.id]">Open lesson page</a>
                       </div>
                     </li>

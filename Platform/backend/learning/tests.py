@@ -245,7 +245,7 @@ class EnrollmentApiTest(TestCase):
         self.assertEqual(teacher_response.status_code, 403)
         self.assertEqual(teacher_response.data["status"], "forbidden")
 
-    def test_enrolled_student_can_submit_and_update_task_answer(self):
+    def test_enrolled_student_cannot_update_task_while_pending_review(self):
         task = Task.objects.create(
             lesson=self.lesson,
             title="Write an answer",
@@ -267,13 +267,13 @@ class EnrollmentApiTest(TestCase):
         self.assertEqual(submit_response.data["status"], "submitted")
         self.assertEqual(TaskSubmission.objects.filter(task=task, student=self.student).count(), 1)
 
-        update_response = self.client.post(
+        pending_response = self.client.post(
             reverse("submit-task", args=[self.lesson.id]),
             {"answer_text": "Hello. My name is Aida. I live in Almaty."},
             format="json",
         )
-        self.assertEqual(update_response.status_code, 200)
-        self.assertEqual(update_response.data["status"], "updated")
+        self.assertEqual(pending_response.status_code, 400)
+        self.assertEqual(pending_response.data["status"], "pending_review")
         self.assertEqual(TaskSubmission.objects.filter(task=task, student=self.student).count(), 1)
 
     def test_task_submit_requires_answer_text(self):

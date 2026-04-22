@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, map, Observable, of, tap } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, tap, throwError } from 'rxjs';
 
 export type UserRole = 'student' | 'teacher';
 
@@ -26,8 +26,13 @@ export interface RegisterPayload {
 }
 
 interface AuthResponse {
-  token: string;
+  access: string;
+  refresh: string;
   user: AuthUser;
+}
+
+interface RefreshResponse {
+  access: string;
 }
 
 export interface ForgotPasswordResponse {
@@ -52,7 +57,9 @@ export interface ResetPasswordResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly tokenKey = 'english_platform_token';
+  private readonly accessTokenKey = 'access_token';
+  private readonly refreshTokenKey = 'refresh_token';
+  private readonly legacyTokenKey = 'english_platform_token';
   private readonly currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
 
   readonly currentUser$ = this.currentUserSubject.asObservable();
@@ -73,7 +80,15 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
+    return this.getAccessToken();
+  }
+
+  getAccessToken(): string | null {
+    return localStorage.getItem(this.accessTokenKey);
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.refreshTokenKey);
   }
 
   register(payload: RegisterPayload): Observable<AuthUser> {
@@ -101,6 +116,23 @@ export class AuthService {
 
   resetPassword(payload: ResetPasswordPayload): Observable<ResetPasswordResponse> {
     return this.http.post<ResetPasswordResponse>('/users/auth/reset-password/', payload);
+  }
+
+  refreshAccessToken(): Observable<string> {
+    const refresh = this.getRefreshToken();
+    if (!refresh) {
+      this.clearAuth();
+      return throwError(() => new Error('Missing refresh token.'));
+    }
+
+    return this.http.post<RefreshResponse>('/users/auth/refresh/', { refresh }).pipe(
+      tap((response) => localStorage.setItem(this.accessTokenKey, response.access)),
+      map((response) => response.access),
+      catchError((error) => {
+        this.clearAuth();
+        return throwError(() => error);
+      }),
+    );
   }
 
   loadCurrentUser(): Observable<AuthUser | null> {
@@ -131,13 +163,21 @@ export class AuthService {
     );
   }
 
+  clearAuthState(): void {
+    this.clearAuth();
+  }
+
   private saveAuth(response: AuthResponse): void {
-    localStorage.setItem(this.tokenKey, response.token);
+    localStorage.setItem(this.accessTokenKey, response.access);
+    localStorage.setItem(this.refreshTokenKey, response.refresh);
+    localStorage.removeItem(this.legacyTokenKey);
     this.currentUserSubject.next(response.user);
   }
 
   private clearAuth(): void {
-    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.accessTokenKey);
+    localStorage.removeItem(this.refreshTokenKey);
+    localStorage.removeItem(this.legacyTokenKey);
     this.currentUserSubject.next(null);
   }
 

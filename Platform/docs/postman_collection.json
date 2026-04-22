@@ -1,0 +1,282 @@
+{
+  "info": {
+    "name": "English Learning Platform API",
+    "description": "Minimal defense Postman collection for the Angular + Django REST Framework English Learning Platform.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "course_id",
+      "value": "1"
+    },
+    {
+      "key": "lesson_id",
+      "value": "1"
+    },
+    {
+      "key": "slot_id",
+      "value": "1"
+    },
+    {
+      "key": "submission_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo_student\",\n  \"password\": \"StudentPass123\"\n}"
+            },
+            "url": "{{base_url}}/users/auth/login/"
+          }
+        },
+        {
+          "name": "Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{base_url}}/users/auth/refresh/"
+          }
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/users/auth/me/"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/users/auth/logout/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "List Courses",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/courses/courses/"
+          }
+        },
+        {
+          "name": "Course Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/courses/courses/{{course_id}}/"
+          }
+        },
+        {
+          "name": "Lesson Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/courses/lessons/{{lesson_id}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Learning",
+      "item": [
+        {
+          "name": "Request Enrollment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/learning/enroll/{{course_id}}/"
+          }
+        },
+        {
+          "name": "Complete Lesson",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/learning/lessons/{{lesson_id}}/complete/"
+          }
+        },
+        {
+          "name": "Lesson Quiz",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/learning/lessons/{{lesson_id}}/quiz/"
+          }
+        },
+        {
+          "name": "Submit Written Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answer_text\": \"This is my written answer for the lesson.\"\n}"
+            },
+            "url": "{{base_url}}/learning/lessons/{{lesson_id}}/task/submit/"
+          }
+        },
+        {
+          "name": "Teacher Review Written Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"score\": 90,\n  \"teacher_feedback\": \"Strong answer.\"\n}"
+            },
+            "url": "{{base_url}}/learning/teacher/task-submissions/{{submission_id}}/review/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Booking And Notifications",
+      "item": [
+        {
+          "name": "Available Slots",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/booking/available-slots/"
+          }
+        },
+        {
+          "name": "Book Slot",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/booking/book/{{slot_id}}/"
+          }
+        },
+        {
+          "name": "Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": "{{base_url}}/notifications/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Translate",
+      "item": [
+        {
+          "name": "Translate Selected Text",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"hello\"\n}"
+            },
+            "url": "{{base_url}}/translate/"
+          }
+        }
+      ]
+    }
+  ]
+}

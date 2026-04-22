@@ -102,7 +102,7 @@ class BookingApiTest(TestCase):
         self.assertEqual(Booking.objects.count(), 1)
 
         duplicate_response = self.client.post(reverse("book-slot", args=[slot.id]))
-        self.assertEqual(duplicate_response.status_code, 200)
+        self.assertEqual(duplicate_response.status_code, 400)
         self.assertEqual(duplicate_response.data["status"], "already_booked")
         self.assertEqual(Booking.objects.count(), 1)
 

@@ -84,6 +84,8 @@ class NotificationApiTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        submission.refresh_from_db()
+        self.assertTrue(submission.passed)
         notification = Notification.objects.get(recipient=self.student, type=Notification.Type.TASK_REVIEWED)
         self.assertEqual(notification.metadata["submission_id"], submission.id)
         self.assertEqual(notification.metadata["score"], 90)

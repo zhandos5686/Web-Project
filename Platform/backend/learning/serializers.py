@@ -106,7 +106,7 @@ class TaskSubmissionSerializer(serializers.ModelSerializer):
 class TeacherTaskSubmissionReviewSerializer(serializers.Serializer):
     score = serializers.IntegerField(min_value=0, max_value=100)
     teacher_feedback = serializers.CharField(required=False, allow_blank=True)
-    passed = serializers.BooleanField()
+    passed = serializers.BooleanField(required=False)
 
 
 class QuizChoiceSerializer(serializers.ModelSerializer):

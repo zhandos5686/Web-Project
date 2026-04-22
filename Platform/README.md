@@ -4,13 +4,18 @@ Defense-ready V1 of a full-stack English learning platform.
 
 The project uses Django REST Framework for the backend API and Angular for the frontend SPA. V1 focuses on a clear, explainable learning flow instead of advanced features.
 
+## Group Members
+- Amanzhol Akezhan
+- Shirinbek Shugyla
+- Makhanbetzhan Zhandos
+
 ## Stack
-- Backend: Django 6, Django REST Framework, DRF token authentication
+- Backend: Django 5, Django REST Framework, JWT authentication with access and refresh tokens
 - Frontend: Angular 21 standalone components
 - Database: SQLite for local development and defense demo
 
 ## Implemented V1 Scope
-- Authentication with register, login, current user, logout, and password reset.
+- JWT authentication with register, login, current user, refresh, logout, and password reset.
 - Student and teacher roles through `UserProfile`.
 - Course catalog with demo categories, courses, modules, lessons, and YouTube URLs.
 - Course detail page with nested modules and lesson links.
@@ -79,6 +84,7 @@ python manage.py seed_demo_data
 
 ## Main API Areas
 - Auth: `/api/users/auth/...`
+- JWT refresh: `/api/users/auth/refresh/`
 - Password reset request: `/api/users/auth/forgot-password/`
 - Password reset confirm: `/api/users/auth/reset-password/`
 - Catalog and lessons: `/api/courses/...`
@@ -94,7 +100,7 @@ Frontend routes:
 - `/forgot-password`: request a reset link by email.
 - `/reset-password?uid=...&token=...`: set a new password from the generated link.
 
-Angular sends API requests through service classes. The API prefix interceptor adds the backend base URL and the auth interceptor behavior is handled by the existing API prefix/token setup.
+Angular sends API requests through service classes. The API prefix interceptor adds the backend base URL, attaches the JWT access token as `Authorization: Bearer <access>`, refreshes the access token with the stored refresh token after a `401`, and retries the original request once.
 
 ## Recommended Defense Demo
 1. Open the home page and explain the V1 goal.

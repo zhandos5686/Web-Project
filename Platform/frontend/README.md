@@ -8,7 +8,9 @@ Angular application for the English Learning Platform.
 - `features`: route-level feature areas such as home, auth, catalog, lesson, progress, teacher, and booking.
 
 ## Authentication
-`AuthService` stores the API token in local storage, loads the current user from the backend, and exposes auth state to components and route guards.
+`AuthService` stores JWT `access_token` and `refresh_token` values in local storage, loads the current user from the backend, and exposes auth state to components and route guards.
+
+The HTTP interceptor sends authenticated API requests with `Authorization: Bearer <access_token>`. When an API request returns `401`, it uses the refresh token to request a new access token, retries the original request once, and clears auth state if refresh fails.
 
 Protected student pages use `authGuard`. The teacher dashboard uses `teacherGuard`.
 

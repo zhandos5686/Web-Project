@@ -9,14 +9,15 @@ Django REST Framework API for the English Learning Platform.
 - `booking`: teacher live lesson slots and bookings.
 
 ## Authentication
-The V1 API uses DRF token authentication.
+The V1 API uses JWT authentication with access and refresh tokens.
 
 - Register: `POST /api/users/auth/register/`
 - Login: `POST /api/users/auth/login/`
+- Refresh access token: `POST /api/users/auth/refresh/`
 - Current user: `GET /api/users/auth/me/`
 - Logout: `POST /api/users/auth/logout/`
 
-Registration creates a Django user and a matching `UserProfile` with the selected role.
+Registration creates a Django user and a matching `UserProfile` with the selected role. Register and login responses include `access`, `refresh`, and `user`.
 
 ## Run
 ```bash

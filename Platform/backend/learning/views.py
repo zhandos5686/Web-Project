@@ -840,6 +840,7 @@ class TeacherTaskSubmissionsView(APIView):
 
 class TeacherReviewTaskSubmissionView(APIView):
     permission_classes = [IsAuthenticated, IsTeacher]
+    passing_score = 60
 
     def post(self, request, submission_id):
         submission = get_object_or_404(
@@ -857,9 +858,12 @@ class TeacherReviewTaskSubmissionView(APIView):
         serializer = TeacherTaskSubmissionReviewSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        submission.score = serializer.validated_data["score"]
+        score = serializer.validated_data["score"]
+        passed = serializer.validated_data.get("passed", score >= self.passing_score)
+
+        submission.score = score
         submission.teacher_feedback = serializer.validated_data.get("teacher_feedback", "")
-        submission.passed = serializer.validated_data["passed"]
+        submission.passed = passed
         submission.status = TaskSubmission.Status.REVIEWED
         submission.reviewed_at = timezone.now()
         submission.save(update_fields=["score", "teacher_feedback", "passed", "status", "reviewed_at", "updated_at"])
