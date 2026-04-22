@@ -1,0 +1,497 @@
+{
+  "info": {
+    "_postman_id": "7d9da059-dcf9-4590-bde9-77bbab222ab6",
+    "name": "collectionPlatform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54203094",
+    "_collection_link": "https://go.postman.co/collection/54203094-7d9da059-dcf9-4590-bde9-77bbab222ab6?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "register",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\": \"student\",\r\n    \"email\": \"student@example.ru\",\r\n    \"password\": \"securePassword123\",\r\n    \"role\": \"student\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/users/auth/register/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "users",
+            "auth",
+            "register",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "login",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\": \"student\",\r\n    \"email\": \"student@example.ru\",\r\n    \"password\": \"securePassword123\",\r\n    \"role\": \"student\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/users/auth/login/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "users",
+            "auth",
+            "login",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "refresh",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2Nzg4NzEyLCJpYXQiOjE3NzY3ODg0MTIsImp0aSI6IjFlMDQyYjUzMWYwNTQ4ZDFiMWU5ODIyNTVhNGJhMDlkIiwidXNlcl9pZCI6IjcifQ.VZFksTWbuTTUXQM1sXA9jt1kvSQmGlvqeo2Y7I4VxF4",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": " {\"refresh\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3Njg3NDgxMiwiaWF0IjoxNzc2Nzg4NDEyLCJqdGkiOiJjNjJlNjk1NGM1MmI0YTgyOGNkODhlOThhZWJiOWIzZSIsInVzZXJfaWQiOiI3In0.Iko65_4Wbx6qpmvENQH4KLp-g6HdXrmm1atM-3kXISw\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/users/auth/refresh/",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "users",
+            "auth",
+            "refresh",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "me",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2ODI4MDgxLCJpYXQiOjE3NzY4Mjc3ODEsImp0aSI6Ijg5ZDZmODc0YmUwNDRjYTViMWE3NTY5Nzg2MGQ4N2YyIiwidXNlcl9pZCI6IjcifQ.lh4fKE-bZG8i019r6VasFGvVaK2uxmsu6vWgTPu16CQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/users/auth/me/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "users",
+            "auth",
+            "me",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "logout",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2Nzg5NzcxLCJpYXQiOjE3NzY3ODk0NzEsImp0aSI6ImFiYTI1Mjg3ZDYxYzQ1ODY4ZDQ1ZThhNzM1YzVlMTM5IiwidXNlcl9pZCI6IjcifQ.31jJyqbyciOYrkOKJN9EWGOMwftZhbaHZAJ_XP5psYc",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"refresh\": \"your_refresh_token_here\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/users/auth/logout/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "users",
+            "auth",
+            "logout",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Courses - List",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2ODI4MDgxLCJpYXQiOjE3NzY4Mjc3ODEsImp0aSI6Ijg5ZDZmODc0YmUwNDRjYTViMWE3NTY5Nzg2MGQ4N2YyIiwidXNlcl9pZCI6IjcifQ.lh4fKE-bZG8i019r6VasFGvVaK2uxmsu6vWgTPu16CQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/courses/courses/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "courses",
+            "courses",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Courses - Get Detail",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2ODI4MDgxLCJpYXQiOjE3NzY4Mjc3ODEsImp0aSI6Ijg5ZDZmODc0YmUwNDRjYTViMWE3NTY5Nzg2MGQ4N2YyIiwidXNlcl9pZCI6IjcifQ.lh4fKE-bZG8i019r6VasFGvVaK2uxmsu6vWgTPu16CQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/courses/courses/1/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "courses",
+            "courses",
+            "1",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Learning - Enroll",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2ODI4MDgxLCJpYXQiOjE3NzY4Mjc3ODEsImp0aSI6Ijg5ZDZmODc0YmUwNDRjYTViMWE3NTY5Nzg2MGQ4N2YyIiwidXNlcl9pZCI6IjcifQ.lh4fKE-bZG8i019r6VasFGvVaK2uxmsu6vWgTPu16CQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"course_id\": 1\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/learning/enroll/1/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "learning",
+            "enroll",
+            "1",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Learning - Get My Courses",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2ODI4MDgxLCJpYXQiOjE3NzY4Mjc3ODEsImp0aSI6Ijg5ZDZmODc0YmUwNDRjYTViMWE3NTY5Nzg2MGQ4N2YyIiwidXNlcl9pZCI6IjcifQ.lh4fKE-bZG8i019r6VasFGvVaK2uxmsu6vWgTPu16CQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/learning/my-courses/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "learning",
+            "my-courses",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Booking - Get Available Slots",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2ODI4MDgxLCJpYXQiOjE3NzY4Mjc3ODEsImp0aSI6Ijg5ZDZmODc0YmUwNDRjYTViMWE3NTY5Nzg2MGQ4N2YyIiwidXNlcl9pZCI6IjcifQ.lh4fKE-bZG8i019r6VasFGvVaK2uxmsu6vWgTPu16CQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/booking/available-slots/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "booking",
+            "available-slots",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Booking - Book Slot",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2ODI4MDgxLCJpYXQiOjE3NzY4Mjc3ODEsImp0aSI6Ijg5ZDZmODc0YmUwNDRjYTViMWE3NTY5Nzg2MGQ4N2YyIiwidXNlcl9pZCI6IjcifQ.lh4fKE-bZG8i019r6VasFGvVaK2uxmsu6vWgTPu16CQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/booking/book/1/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "booking",
+            "book",
+            "1",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Notifications - List",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2ODI4MDgxLCJpYXQiOjE3NzY4Mjc3ODEsImp0aSI6Ijg5ZDZmODc0YmUwNDRjYTViMWE3NTY5Nzg2MGQ4N2YyIiwidXNlcl9pZCI6IjcifQ.lh4fKE-bZG8i019r6VasFGvVaK2uxmsu6vWgTPu16CQ",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/notifications/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "notifications",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Translate",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"text\": \"Hello\",\r\n  \"source_lang\": \"en\",\r\n  \"target_lang\": \"es\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8000/api/translate/",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "translate",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
